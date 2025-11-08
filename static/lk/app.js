@@ -19,19 +19,49 @@ const views = {
         <h2>OpenVET</h2>
     </div>
     ${data.clear ? '' : `
-    <h4>Врачам</h4>
-    <button onmousedown="pages.clients()"><img src="./img/ico/person-vcard.svg" alt="ico">Расписание</button>
-    <button onmousedown="pages.clients()"><img src="./img/ico/person-vcard.svg" alt="ico">Записи</button>
-    <button onmousedown="pages.clients()"><img src="./img/ico/person-vcard.svg" alt="ico">Клиенты</button>
-    <button onmousedown="pages.refunds()"><img src="./img/ico/arrow-left-right.svg" alt="ico">Животные</button>
-    
+
+${currentUser.role == 'admin' ? `
     <h4>Админам</h4>
     <button onmousedown="pages.users()"><img src="./img/ico/people.svg" alt="ico">Пользователи</button>
-    <button onmousedown="pages.refunds()"><img src="./img/ico/arrow-left-right.svg" alt="ico">Отчёт</button>
+    <button onmousedown="pages.refunds()"><img src="./img/ico/file-earmark-bar-graph-fill.svg" alt="ico">Отчёт</button>
+    
+    <h4>Врачам</h4>
+    <button onmousedown="pages.clients()"><img src="./img/ico/calendar2-week-fill.svg" alt="ico">Расписание</button>
+    <button onmousedown="pages.clients()"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
+    <button onmousedown="pages.clients()"><img src="./img/ico/person-vcard.svg" alt="ico">Клиенты</button>
+    <button onmousedown="pages.refunds()"><img src="./img/ico/bandaid-fill.svg" alt="ico">Животные</button>
     
     <h4></h4>
     <button onmousedown="pages.profile()"><img src="./img/ico/person.svg" alt="ico">Профиль</button>
     <button onmousedown="pages.help()"><img src="./img/ico/question-octagon.svg" alt="ico">Помощь</button>
+    
+    
+`:''}
+${currentUser.role == 'doctor' ? `
+    <h4>Врачам</h4>
+    <button onmousedown="pages.clients()"><img src="./img/ico/calendar2-week-fill.svg" alt="ico">Расписание</button>
+    <button onmousedown="pages.clients()"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
+    <button onmousedown="pages.clients()"><img src="./img/ico/person-vcard.svg" alt="ico">Клиенты</button>
+    <button onmousedown="pages.refunds()"><img src="./img/ico/bandaid-fill.svg" alt="ico">Животные</button>
+    
+    <h4></h4>
+    <button onmousedown="pages.profile()"><img src="./img/ico/person.svg" alt="ico">Профиль</button>
+    <button onmousedown="pages.help()"><img src="./img/ico/question-octagon.svg" alt="ico">Помощь</button>
+`:''}
+${currentUser.role == 'client' ? `
+    <h4></h4>
+    <button onmousedown="location.href='tel:+79277997846'"><img src="./img/ico/telephone-fill.svg" alt="ico">Позвонить</button>
+    <button onmousedown="pages.clients()"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
+    <button onmousedown="pages.refunds()"><img src="./img/ico/bandaid-fill.svg" alt="ico">Животные</button>
+    <h4></h4>
+    <button onmousedown="pages.profile()"><img src="./img/ico/person.svg" alt="ico">Профиль</button>
+    <button onmousedown="pages.help()"><img src="./img/ico/question-octagon.svg" alt="ico">Помощь</button>
+`:''}
+
+
+
+    
+    
     `}
 </nav>
     `),
@@ -123,6 +153,7 @@ ${storage.list.map(know => (`
 <button class="button">Настройки</button>
 <!--button class="button">Тип текст</button-->
     `),
+    buttonRole : data => (`<button class="btn ${currentUser.role == data.code ? 'btn-mark' : ''}" onmousedown="currentUser.role='${data.code}';pages.help()">${data.name}</button>`),
 }
 let pages = {
     help: data => {
@@ -133,8 +164,8 @@ let pages = {
                 <h1>Помощь</h1>
                 <div class="text">
                     <p>
-                    <b>Как работает программа?</b><br>
-                    Нормально
+                    <b>О нас</b><br>
+                    Лучшая вет клинника!
                     </p>
                     
                     <p><b>Контакты</b><br> 
@@ -143,12 +174,19 @@ let pages = {
                         <br><a href="tel:+79277997846">Позвонить +7 (927) 799-78-46</a>
 						<br><a href="tel:+79675552322">Позвонить +7 (967) 555-23-22</a> (внутренний 100)
                     </p>
+                    
+                    <p>
+                    <b>Ответы на частые вопросы</b><br>
+                    А как кушать?
+                    </p>
                 </div>
+            </div>
+            <div class="title block">
+                <h1>Тест ролей (для демонстрации)</h1>
                 <div class="buttons">
-                    <button class="btn btn-mark" onmousedown="pages.formAdd()">Администратор</button>
-                    <button class="btn" onmousedown="pages.formAdd()">Менеджер</button>
-                    <button class="btn" onmousedown="pages.formAdd()">Продавец</button>
-                    <button class="btn" onmousedown="pages.formAdd()">Новый пользователь</button>
+                    ${views.buttonRole({code:'admin', name:'Админ'})}
+                    ${views.buttonRole({code:'doctor', name:'Доктор'})}
+                    ${views.buttonRole({code:'client', name:'Клиент'})}
                 </div>
             </div>
             
@@ -170,8 +208,8 @@ let pages = {
             <button class="btn btn-mark">Войти</button>
         </div>
         <div class="buttons">
-            <button class="btn" type="button" onmousedown="pages.registration()">Регистрация</button>
-            <button class="btn" type="button" onmousedown="app.loginTest()">Восстановить пароль</button>
+            <button class="btn" type="button" onmousedown="notify.message('Восстановите через администратора')">Забыл пароль</button>
+            <button class="btn" type="button" onmousedown="app.loginTest()">Тест</button>
         </div>
     </form>
 </div>
@@ -2372,6 +2410,11 @@ const app = {
     
 }
 
+const currentUser = {
+    id: 0,
+    name: 'Test',
+    role: '', // client || doctor || admin
+}
 
 // error to log
 {
