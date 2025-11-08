@@ -1,0 +1,24 @@
+services:
+
+  db:
+    container_name: pg1
+    restart: always
+    image: docker.io/library/postgres:15.2
+    env_file:
+      - ./.env
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
+    ports:
+      - "15432:5432"
+
+  adminer:
+    container_name: adminer1
+    image: docker.io/library/adminer
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - 45010:8080
+
+volumes:
+  pg_data:
