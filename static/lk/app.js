@@ -21,11 +21,11 @@ const views = {
     ${data.clear ? '' : `
 
 ${currentUser.role == 'admin' ? `
-    <h4>Админам</h4>
+    <h4></h4>
     <button onmousedown="pages.users()"><img src="./img/ico/people.svg" alt="ico">Пользователи</button>
     <button onmousedown="pages.refunds()"><img src="./img/ico/file-earmark-bar-graph-fill.svg" alt="ico">Отчёт</button>
     
-    <h4>Врачам</h4>
+    <h4></h4>
     <button onmousedown="pages.clients()"><img src="./img/ico/calendar2-week-fill.svg" alt="ico">Расписание</button>
     <button onmousedown="pages.clients()"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
     <button onmousedown="pages.clients()"><img src="./img/ico/person-vcard.svg" alt="ico">Клиенты</button>
@@ -38,7 +38,7 @@ ${currentUser.role == 'admin' ? `
     
 `:''}
 ${currentUser.role == 'doctor' ? `
-    <h4>Врачам</h4>
+    <h4></h4>
     <button onmousedown="pages.clients()"><img src="./img/ico/calendar2-week-fill.svg" alt="ico">Расписание</button>
     <button onmousedown="pages.clients()"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
     <button onmousedown="pages.clients()"><img src="./img/ico/person-vcard.svg" alt="ico">Клиенты</button>
@@ -50,7 +50,7 @@ ${currentUser.role == 'doctor' ? `
 `:''}
 ${currentUser.role == 'client' ? `
     <h4></h4>
-    <button onmousedown="location.href='tel:+79277997846'"><img src="./img/ico/telephone-fill.svg" alt="ico">Позвонить</button>
+    <button onmousedown="location.href='tel:+79675552322'"><img src="./img/ico/telephone-fill.svg" alt="ico">Позвонить</button>
     <button onmousedown="pages.clients()"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
     <button onmousedown="pages.refunds()"><img src="./img/ico/bandaid-fill.svg" alt="ico">Животные</button>
     <h4></h4>
@@ -160,6 +160,7 @@ let pages = {
         utils.setText(` 
         ${views.header(data)}
         <div class="content" id="content">
+            ${currentUser.role == '' ? '': `
             <div class="title block">
                 <h1>Помощь</h1>
                 <div class="text">
@@ -171,7 +172,6 @@ let pages = {
                     <p><b>Контакты</b><br> 
                         Ярослав Ряднов (По всем вопросам)
                         <br><a href="https://t.me/openvet_contact" target="_blank" rel="nofollow">Telegram @openvet_contact</a>
-                        <br><a href="tel:+79277997846">Позвонить +7 (927) 799-78-46</a>
 						<br><a href="tel:+79675552322">Позвонить +7 (967) 555-23-22</a> (внутренний 100)
                     </p>
                     
@@ -181,8 +181,13 @@ let pages = {
                     </p>
                 </div>
             </div>
+            `}
             <div class="title block">
-                <h1>Тест ролей (для демонстрации)</h1>
+                <h1>Тест</h1>
+                <div class="text">
+                    <p>Тестовый режим для демонстрации возможностей каждой роли</p>
+                    <p>Для продолжения выберите роль</p>
+                </div>
                 <div class="buttons">
                     ${views.buttonRole({code:'admin', name:'Админ'})}
                     ${views.buttonRole({code:'doctor', name:'Доктор'})}
