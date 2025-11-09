@@ -23,11 +23,11 @@ const views = {
 ${currentUser.role == 'admin' ? `
     <h4></h4>
     <button onmousedown="pages.users()"><img src="./img/ico/people.svg" alt="ico">Пользователи</button>
-    <button onmousedown="pages.refunds()"><img src="./img/ico/file-earmark-bar-graph-fill.svg" alt="ico">Отчёт</button>
+    <button onmousedown="pages.report()"><img src="./img/ico/file-earmark-bar-graph-fill.svg" alt="ico">Отчёт</button>
     
     <h4></h4>
-    <button onmousedown="pages.clients()"><img src="./img/ico/calendar2-week-fill.svg" alt="ico">Расписание</button>
-    <button onmousedown="pages.clients()"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
+    <button onmousedown="pages.timesheet()"><img src="./img/ico/calendar2-week-fill.svg" alt="ico">Расписание</button>
+    <button onmousedown="pages.record()"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
     <button onmousedown="pages.clients()"><img src="./img/ico/person-vcard.svg" alt="ico">Клиенты</button>
     <button onmousedown="pages.refunds()"><img src="./img/ico/bandaid-fill.svg" alt="ico">Животные</button>
     
@@ -39,8 +39,8 @@ ${currentUser.role == 'admin' ? `
 `:''}
 ${currentUser.role == 'doctor' ? `
     <h4></h4>
-    <button onmousedown="pages.clients()"><img src="./img/ico/calendar2-week-fill.svg" alt="ico">Расписание</button>
-    <button onmousedown="pages.clients()"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
+    <button onmousedown="pages.timesheet()"><img src="./img/ico/calendar2-week-fill.svg" alt="ico">Расписание</button>
+    <button onmousedown="pages.record()"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
     <button onmousedown="pages.clients()"><img src="./img/ico/person-vcard.svg" alt="ico">Клиенты</button>
     <button onmousedown="pages.refunds()"><img src="./img/ico/bandaid-fill.svg" alt="ico">Животные</button>
     
@@ -51,7 +51,7 @@ ${currentUser.role == 'doctor' ? `
 ${currentUser.role == 'client' ? `
     <h4></h4>
     <button onmousedown="location.href='tel:+79675552322'"><img src="./img/ico/telephone-fill.svg" alt="ico">Позвонить</button>
-    <button onmousedown="pages.clients()"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
+    <button onmousedown="pages.record()"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
     <button onmousedown="pages.refunds()"><img src="./img/ico/bandaid-fill.svg" alt="ico">Животные</button>
     <h4></h4>
     <button onmousedown="pages.profile()"><img src="./img/ico/person.svg" alt="ico">Профиль</button>
@@ -156,6 +156,27 @@ ${storage.list.map(know => (`
     buttonRole : data => (`<button class="btn ${currentUser.role == data.code ? 'btn-mark' : ''}" onmousedown="currentUser.role='${data.code}';pages.help()">${data.name}</button>`),
 }
 let pages = {
+    login: data => {
+        utils.setText(`
+<div class="loginBox">
+    <h1 class="logo_text">OpenVET</h1>
+    <form class="form1 block" id="formLogin" onsubmit="app.login(this);return false">
+        <label class="name required">E-mail</label>
+        <div class="value"><input name="login" type="text" value="" maxlength="64"></div>
+        <br>
+        <label class="name required">Пароль</label>
+        <div class="value"><input name="password" type="password" value="" maxlength="64"></div>
+        <div class="buttons">
+            <button class="btn btn-mark">Войти</button>
+        </div>
+        <div class="buttons">
+            <button class="btn" type="button" onmousedown="notify.message('Восстановите через администратора')">Забыл пароль</button>
+            <button class="btn" type="button" onmousedown="app.loginTest()">Тест</button>
+        </div>
+    </form>
+</div>
+      `);
+    },
     help: data => {
         utils.setText(` 
         ${views.header(data)}
@@ -198,28 +219,152 @@ let pages = {
         </div>
         `)
     },
-
-    login: data => {
-      utils.setText(`
-<div class="loginBox">
-    <h1 class="logo_text">OpenVET</h1>
-    <form class="form1 block" id="formLogin" onsubmit="app.login(this);return false">
-        <label class="name required">E-mail</label>
-        <div class="value"><input name="login" type="text" value="" maxlength="64"></div>
-        <br>
-        <label class="name required">Пароль</label>
-        <div class="value"><input name="password" type="password" value="" maxlength="64"></div>
-        <div class="buttons">
-            <button class="btn btn-mark">Войти</button>
+    users: data => {
+        utils.setText(` 
+${views.header(data)}
+<div class="content" id="content">
+    <div class="title block">
+        <h1>Пользователи</h1>
+        <div class="text">
+            <p>Список пользователей, у которых есть доступ в личный кабинет</p>
+            <p>Добавлять и изменять, менять роли - доступно только админу</p>
         </div>
         <div class="buttons">
-            <button class="btn" type="button" onmousedown="notify.message('Восстановите через администратора')">Забыл пароль</button>
-            <button class="btn" type="button" onmousedown="app.loginTest()">Тест</button>
+            ${currentUser.role == 'admin' ? `<button class="btn btn-mark" onmousedown="pages.user()"><img src="./img/ico/plus-circle.svg" alt="ico">Добавить</button>`:''}
+            <button class="btn" onmousedown="">Все</button>
+            <button class="btn" onmousedown="">Админы</button>
+            <button class="btn" onmousedown="">Врачи</button>
+            <button class="btn" onmousedown="">Клиенты</button>
         </div>
-    </form>
+    </div>
+    <div class="list block" style="grid-template-columns: 1fr 3fr 2fr 1fr 1fr;">
+        <div class="line">
+            <div class="grid-item grid-header">ID</div>
+            <div class="grid-item grid-header">ФИО</div>
+            <div class="grid-item grid-header">Телефон</div>
+            <div class="grid-item grid-header">Роль</div>
+            <div class="grid-item grid-header">Действия</div>
+        </div>
+    
+        
+    </div>
 </div>
-      `);
+        `)
+
     },
+    user:data => {},
+
+    report: data => {
+        utils.setText(` 
+        ${views.header(data)}
+        <div class="content" id="content">
+            <div class="title block">
+                <h1>Отчёт</h1>
+                <div class="text">
+                    <p>
+Клиентов всего:
+<br>Записей всего:
+<br>Записей всего отменённых:
+<br>Успешных записей за текущий месяц:
+</p>
+<p>Данные актуальны в момент открытия страницы</p>
+                </div>
+            </div>
+            
+        </div>
+        `)
+    },
+
+    timesheet: data => {
+        utils.setText(` 
+        ${views.header(data)}
+        <div class="content" id="content">
+            <div class="title block">
+                <h1>Расписание</h1>
+                <div class="text">
+                    <p>
+Аааааааааааааа!
+думаю.. Надо дни и часы разделить на клеточки по пол часа..
+Так.. 
+Тип.. А как на нескольких врачей.. И как админ будет видеть расписание нескольких врачей
+Ну каждый врач своё расписание - это да.. А как несколько в одно? А если врачей 10? 
+либо в виде цифры в клетках.. Если
+
+<br><br>
+Показываем фильтр по году и месяцу
+<br>и показываем только 1 месяц
+
+Клеточки - да, но как показывать разных врачей и их наложение в одно время? 
+Пример 4 врача
+
+</p>
+                </div>
+            </div>
+            
+        </div>
+        `)
+    },
+
+    record: data => {
+        utils.setText(` 
+${views.header(data)}
+<div class="content" id="content">
+    <div class="title block">
+        <h1>Записи</h1>
+        <div class="text">
+            <p>Список записей на приём, которые включают в себя записи на приём и результаты</p>
+            <p>Добавлять и просматривать могут все, менять только админы и врачи</p>
+        </div>
+        <div class="buttons">
+            <button class="btn btn-mark" onmousedown="pages.user()"><img src="./img/ico/plus-circle.svg" alt="ico">Добавить</button>
+        </div>
+    </div>
+    ${currentUser.role == 'admin' ? `
+    <div class="list block" style="grid-template-columns: 1fr 3fr 2fr 1fr 1fr 1fr;">
+        <div class="line">
+            <div class="grid-item grid-header">ID</div>
+            <div class="grid-item grid-header">Статус</div>
+            <div class="grid-item grid-header">ФИО клиента</div>
+            <div class="grid-item grid-header">Назначенный Врач</div>
+            <div class="grid-item grid-header">Дата время визита</div>
+            <div class="grid-item grid-header">Действия</div>
+        </div>
+    </div>
+    `:''}
+    ${currentUser.role == 'doctor' ? `
+    <div class="list block" style="grid-template-columns: 1fr 3fr 2fr 1fr 1fr 1fr;">
+        <div class="line">
+            <div class="grid-item grid-header">ID</div>
+            <div class="grid-item grid-header">Статус</div>
+            <div class="grid-item grid-header">ФИО клиента</div>
+            <div class="grid-item grid-header">Назначенный Врач</div>
+            <div class="grid-item grid-header">Дата время визита</div>
+            <div class="grid-item grid-header">Действия</div>
+        </div>
+    </div>
+    `:''}
+    ${currentUser.role == 'client' ? `
+    <div class="list block" style="grid-template-columns: 1fr 3fr 2fr 1fr 1fr 1fr;">
+        <div class="line">
+            <div class="grid-item grid-header">ID</div>
+            <div class="grid-item grid-header">Статус</div>
+            <div class="grid-item grid-header">ФИО клиента</div>
+            <div class="grid-item grid-header">Назначенный Врач</div>
+            <div class="grid-item grid-header">Дата время визита</div>
+            <div class="grid-item grid-header">Действия</div>
+        </div>
+    </div>
+    `:''}
+    
+    
+</div>
+        `)
+
+    },
+
+
+
+
     
     clients: data => {
         utils.setText(` 
@@ -788,44 +933,10 @@ ${views.header(data)}
         `);
     },
     
-    users: data => {
-        utils.setText(` 
-${views.header(data)}
-<div class="content" id="content">
-    <div class="title block">
-        <h1>Пользователи</h1>
-        <div class="text">
-            <p>Список пользователей данной системы (не клиенты)</p>
-            <p>Доступно только админам и менеджерам</p>
-            <p>Нет возможности добавить, так как регистрируются они сами и попадают в список Свободны</p>
-            <p>Из списка свободных им определяют роль</p>
-            <p>Роль админа выдаётся только через обращения по контакту, которые в помощи</p>
-            <p>Менеджер может быть назначен за определённой сетью и выдавать роли только этой сети, так же видеть кто в его сети</p>
-        </div>
-        <div class="buttons">
-            <button class="btn" onmousedown="">Свободные</button>
-            <button class="btn" onmousedown="">Продавцы</button>
-            <button class="btn" onmousedown="">Менеджеры</button>
-            <button class="btn" onmousedown="">Админы</button>
-        </div>
-    </div>
-    <div class="list block" style="grid-template-columns: 1fr 3fr 2fr 1fr 1fr;">
-        <div class="line">
-            <div class="grid-item grid-header">ID</div>
-            <div class="grid-item grid-header">ФИО</div>
-            <div class="grid-item grid-header">Телефон</div>
-            <div class="grid-item grid-header">Роль</div>
-            <div class="grid-item grid-header">Действия</div>
-        </div>
-    
-        
-    </div>
-</div>
-        `)
-        
-    },
-    user:data => {},
-    
+
+
+
+
     profile:data => {
         if (!data) data = {};
         
