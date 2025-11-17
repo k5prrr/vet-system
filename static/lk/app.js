@@ -6,6 +6,11 @@
 const options = {
     version: '9 2025-09-04',
     apiUrl: './api/v2.php',
+    roleMap: {
+        'admin':'Админ',
+        'doctor':'Доктор',
+        'client':'Клиент'
+    }
 }
 var storage = {
     idb: null
@@ -29,7 +34,7 @@ ${currentUser.role == 'admin' ? `
     <button onmousedown="pages.timesheet()"><img src="./img/ico/calendar2-week-fill.svg" alt="ico">Расписание</button>
     <button onmousedown="pages.record()"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
     <button onmousedown="pages.clients()"><img src="./img/ico/person-vcard.svg" alt="ico">Клиенты</button>
-    <button onmousedown="pages.refunds()"><img src="./img/ico/bandaid-fill.svg" alt="ico">Животные</button>
+    <button onmousedown="pages.animals()"><img src="./img/ico/bandaid-fill.svg" alt="ico">Животные</button>
     
     <h4></h4>
     <button onmousedown="pages.profile()"><img src="./img/ico/person.svg" alt="ico">Профиль</button>
@@ -42,8 +47,7 @@ ${currentUser.role == 'doctor' ? `
     <button onmousedown="pages.timesheet()"><img src="./img/ico/calendar2-week-fill.svg" alt="ico">Расписание</button>
     <button onmousedown="pages.record()"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
     <button onmousedown="pages.clients()"><img src="./img/ico/person-vcard.svg" alt="ico">Клиенты</button>
-    <button onmousedown="pages.refunds()"><img src="./img/ico/bandaid-fill.svg" alt="ico">Животные</button>
-    
+    <button onmousedown="pages.animals()"><img src="./img/ico/bandaid-fill.svg" alt="ico">Животные</button>
     <h4></h4>
     <button onmousedown="pages.profile()"><img src="./img/ico/person.svg" alt="ico">Профиль</button>
     <button onmousedown="pages.help()"><img src="./img/ico/question-octagon.svg" alt="ico">Помощь</button>
@@ -52,7 +56,7 @@ ${currentUser.role == 'client' ? `
     <h4></h4>
     <button onmousedown="location.href='tel:+79675552322'"><img src="./img/ico/telephone-fill.svg" alt="ico">Позвонить</button>
     <button onmousedown="pages.record()"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
-    <button onmousedown="pages.refunds()"><img src="./img/ico/bandaid-fill.svg" alt="ico">Животные</button>
+    <!--button onmousedown="pages.animals()"><img src="./img/ico/bandaid-fill.svg" alt="ico">Животные</button-->
     <h4></h4>
     <button onmousedown="pages.profile()"><img src="./img/ico/person.svg" alt="ico">Профиль</button>
     <button onmousedown="pages.help()"><img src="./img/ico/question-octagon.svg" alt="ico">Помощь</button>
@@ -210,9 +214,7 @@ let pages = {
                     <p>Для продолжения выберите роль</p>
                 </div>
                 <div class="buttons">
-                    ${views.buttonRole({code:'admin', name:'Админ'})}
-                    ${views.buttonRole({code:'doctor', name:'Доктор'})}
-                    ${views.buttonRole({code:'client', name:'Клиент'})}
+                    ${Object.keys(options.roleMap).map(key => views.buttonRole({code:key, name:options.roleMap[key]})).join('')}
                 </div>
             </div>
             
@@ -319,19 +321,7 @@ ${views.header(data)}
             <button class="btn btn-mark" onmousedown="pages.user()"><img src="./img/ico/plus-circle.svg" alt="ico">Добавить</button>
         </div>
     </div>
-    ${currentUser.role == 'admin' ? `
-    <div class="list block" style="grid-template-columns: 1fr 3fr 2fr 1fr 1fr 1fr;">
-        <div class="line">
-            <div class="grid-item grid-header">ID</div>
-            <div class="grid-item grid-header">Статус</div>
-            <div class="grid-item grid-header">ФИО клиента</div>
-            <div class="grid-item grid-header">Назначенный Врач</div>
-            <div class="grid-item grid-header">Дата время визита</div>
-            <div class="grid-item grid-header">Действия</div>
-        </div>
-    </div>
-    `:''}
-    ${currentUser.role == 'doctor' ? `
+    ${currentUser.role == 'admin' || currentUser.role == 'doctor'? `
     <div class="list block" style="grid-template-columns: 1fr 3fr 2fr 1fr 1fr 1fr;">
         <div class="line">
             <div class="grid-item grid-header">ID</div>
@@ -344,14 +334,14 @@ ${views.header(data)}
     </div>
     `:''}
     ${currentUser.role == 'client' ? `
-    <div class="list block" style="grid-template-columns: 1fr 3fr 2fr 1fr 1fr 1fr;">
+    <div class="list block" style="grid-template-columns: 1fr 1fr 2fr 2fr 2fr 1fr;">
         <div class="line">
             <div class="grid-item grid-header">ID</div>
             <div class="grid-item grid-header">Статус</div>
-            <div class="grid-item grid-header">ФИО клиента</div>
-            <div class="grid-item grid-header">Назначенный Врач</div>
+            <div class="grid-item grid-header">Животное(кличка)</div>
+            <div class="grid-item grid-header">Врач</div>
             <div class="grid-item grid-header">Дата время визита</div>
-            <div class="grid-item grid-header">Действия</div>
+            <div class="grid-item grid-header">Подробнее</div>
         </div>
     </div>
     `:''}
@@ -373,20 +363,19 @@ ${views.header(data)}
     <div class="title block">
         <h1>Клиенты</h1>
         <div class="text">
-            <p>Список клиентов, которые вы добавили</p>
-            <p>После добавления, отсутствует возможность удалить и изменить. Если допустили ошибку, то обратитесь к администратору, контакты указаны на странице помощи</p>
+            <p>Список всех клиентов</p>
+            <p>Добавлять, менять, просматривать только врачи и админы</p>
         </div>
         <div class="buttons">
             <button class="btn btn-mark" onmousedown="pages.client()"><img src="./img/ico/plus-circle.svg" alt="ico">Добавить клиента</button>
         </div>
     </div>
-    <div class="list block" style="grid-template-columns: 1fr 3fr 2fr 1fr 2fr;">
+    <div class="list block" style="grid-template-columns: 1fr 3fr 2fr 1fr;">
         <div class="line">
             <div class="grid-item grid-header">ID</div>
             <div class="grid-item grid-header">ФИО Клиента</div>
             <div class="grid-item grid-header">Телефон</div>
-            <div class="grid-item grid-header">Код продукта</div>
-            <div class="grid-item grid-header">Устройство</div>
+            <div class="grid-item grid-header">Действия</div>
         </div>
     
         
@@ -612,7 +601,257 @@ ${views.header(data)}
         `);
 
     },
+
+
+    animals: data => {
+        utils.setText(` 
+${views.header(data)}
+<div class="content" id="content">
+    <div class="title block">
+        <h1>Животные</h1>
+        <div class="text">
+            <p>Список всех животных</p>
+            <p>Добавлять, менять, просматривать только врачи и админы</p>
+        </div>
+        <div class="buttons">
+            <button class="btn btn-mark" onmousedown="pages.animal()"><img src="./img/ico/plus-circle.svg" alt="ico">Добавить живность</button>
+        </div>
+    </div>
+    <div class="list block" style="grid-template-columns: 1fr 1fr 2fr 1fr 3fr 1fr;">
+        <div class="line">
+            <div class="grid-item grid-header">ID</div>
+            <div class="grid-item grid-header">Тип</div>
+            <div class="grid-item grid-header">Кличка</div>
+            <div class="grid-item grid-header">Дата рождения</div>
+            <div class="grid-item grid-header">Хозяин</div>
+            <div class="grid-item grid-header">Действия</div>
+        </div>
     
+        
+    </div>
+</div>
+        `)
+
+    },
+    animal: data => {
+        if (!data) data = {};
+
+        // Если передан ID клиента — подгружаем данные из хранилища
+        if (
+            data.id &&
+            storage.data.Client.mapIdIndex[data.id] !== undefined &&
+            storage.data.Client.list[storage.data.Client.mapIdIndex[data.id]]
+        ) {
+            data = storage.data.Client.list[storage.data.Client.mapIdIndex[data.id]];
+        }
+
+        // Опции для устройства обмена (из вашего HTML)
+        const productOptions = [
+            { value: '0', text: 'Другое' }
+        ];
+
+
+
+        utils.setText(`
+            ${views.header(data)}
+            <div class="content" id="content">
+                <div class="title block">
+                    <h1>Животное</h1>
+                    <div class="text">
+                        <p>Поля с * обязательны для заполнения.</p>
+                        <p>Город - выбирается автоматически текущий город магазина</p>
+                    </div>
+                </div>
+    
+                <form class="form1 block" onsubmit="return false">
+                    <label class="name required">Магазин (в котором вы сейчас)</label>
+                    <div class="value">
+                        <select name="shop" id="shop" required>
+                            <option value="" disabled selected>Выбрать</option>
+                            <option value="5">Адрес 1</option>
+                            <option value="20">Адрес id20</option>
+                            <option value="21">Адрес</option>
+                            <option value="30">Адрес</option>
+                            <option value="40">Адрес длинный длинный длинный длинный длинный длинный длинный 555</option>
+                        </select>
+                    </div>
+                    
+                    <!--label class="name">id: ${data.id || 0}</label>
+                    <div class="value"><input name="id" type="hidden" value="${data.id || 0}"></div-->
+    
+                    <label class="name required">Фамилия</label>
+                    <div class="value">
+                        <input
+                            type="text"
+                            name="family_name"
+                            value="${data.family_name || ''}"
+                            placeholder="Введите фамилию"
+                            maxlength="128"
+                            required
+                        >
+                    </div>
+    
+                    <label class="name required">Имя</label>
+                    <div class="value">
+                        <input
+                            type="text"
+                            name="name"
+                            value="${data.name || ''}"
+                            placeholder="Введите имя"
+                            maxlength="128"
+                            required
+                        >
+                    </div>
+                    
+                    <label class="name required">Отчество</label>
+                    <div class="value">
+                        <input
+                            type="text"
+                            name="middle_name"
+                            value="${data.middle_name || ''}"
+                            placeholder="Введите отчество"
+                            maxlength="128"
+                            required
+                        >
+                    </div>
+    
+                    <label class="name required">Телефон</label>
+                    <div class="value">
+                        <input
+                            type="tel"
+                            name="phone"
+                            value="${data.phone || ''}"
+                            onfocus="app.formatPhoneNumber(this)"
+                            oninput="app.formatPhoneNumber(this)"
+                            placeholder="+7 (XXX) XXX-XX-XX"
+                            required
+                        >
+                    </div>
+    
+                    <label class="name">Email</label>
+                    <div class="value">
+                        <input
+                            type="email"
+                            name="email"
+                            value="${data.email || ''}"
+                            placeholder="Введите E-mail"
+                            maxlength="256"
+                        >
+                    </div>
+    
+
+    
+                    <label class="name required">Дата рождения</label>
+                    <div class="value">
+                        <input
+                            type="text"
+                            name="birth_date"
+                            value="${data.birth_date || ''}"
+                            placeholder="дд/мм/гггг"
+                            required
+                        >
+                    </div>
+    
+                    <label class="name required">Пол</label>
+                    <div class="value">
+                        <div class="gender">
+                            <label class="gender-radio">
+                                <input type="radio" id="male" name="gender_id" value="1" ${data.gender_id == 1 ? 'checked' : ''} required> М
+                            </label>
+                            <label class="gender-radio">
+                                <input type="radio" id="female" name="gender_id" value="2" ${data.gender_id == 2 ? 'checked' : ''}> Ж
+                            </label>
+                        </div>
+                    </div>
+    
+                    <label class="name required">Устройство обмена</label>
+                    <div class="value">
+                        <select name="old_product_id" id="old_product_id" required>
+                            <option value="" disabled selected>Выбрать</option>
+                            ${productOptions.map(opt =>
+            `<option value="${opt.value}">${opt.text}</option>`
+        ).join('')}
+                        </select>
+                                              
+                        
+                        
+                        <input
+                            
+                            type="text"
+                            name="old_product_name"
+                            id="old_product_name" 
+                            value="${data.old_product_name || ''}" 
+                            style="display: none;" 
+                            placeholder="Введите название устройства"
+                        >
+                        
+                        
+                        
+                        
+                    </div>
+    
+                    <label class="name required">Модель устройства</label>
+                    <div class="value">
+                        <input
+                            type="text"
+                            name="old_product_model"
+                            value="${data.old_product_model || ''}"
+                            placeholder=""
+                            required
+                        >
+                    </div>
+    
+                    <label class="name required">Код продукта</label>
+                    <div class="value">
+                        <input
+                            type="text"
+                            name="product_code"
+                            value="${data.product_code || ''}"
+                            placeholder="BR00000"
+                            maxlength="7"
+                            oninput="app.formatDeviceInput(this)"
+                            required
+                        >
+                    </div>
+    
+                    <!-- Картриджи -->
+                    <label class="name required">Количество купленных картриджей MINIKAN 5 (если нет, ставим 0)</label>
+                    <div class="value">
+                        <input
+                            type="text"
+                            name="quantity_cartridge06"
+                            value="${data.quantity_cartridge06 || ''}"
+                            oninput="this.value = this.value == '' ? '' :utils.toInt(this.value)"
+                            placeholder="0,6 Ом"
+                            required
+                        >
+                        <input
+                            type="text"
+                            name="quantity_cartridge08"
+                            value="${data.quantity_cartridge08 || ''}"
+                            oninput="this.value = this.value == '' ? '' :utils.toInt(this.value)"
+                            placeholder="0,8 Ом"
+                            required
+                        >
+                        <input
+                            type="text"
+                            name="quantity_cartridge1"
+                            value="${data.quantity_cartridge1 || ''}"
+                            oninput="this.value = this.value == '' ? '' :utils.toInt(this.value)"
+                            placeholder="1 Ом"
+                            required
+                        >
+                    </div>
+                    <div class="buttons">
+                        <button class="btn btn-mark">Добавить</button>
+                    </div>
+                </form>
+            </div>
+        `);
+
+    },
+
+
     refunds: data => {
         utils.setText(` 
 ${views.header(data)}
@@ -946,28 +1185,18 @@ ${views.header(data)}
                 <div class="title block">
                     <h1>Профиль</h1>
                     <div class="text">
-                        <p>Менять только через админа. Контакты в помощи</p>
+                        <p>
+                        <b>ФИО:</b> ${currentUser.name}<br>
+                    <b>Роль:</b> ${options.roleMap[currentUser.role] ? options.roleMap[currentUser.role] : 'нет'}
+                        
+                        
+</p>
+                        <p>Менять только через админа.<br> Контакты в помощи</p>
+                    </div>
+                    <div class="buttons">
+                        <button class="btn" onmousedown="pages.client()">Выйти</button>
                     </div>
                 </div>
-    
-                <form class="form1 block" onsubmit="return false">
-                    <label class="name"><b>ФИО:</b> Фам имя отч</label>
-                    <label class="name"><b>Роль:</b> Продавец</label>
-                    <label class="name"><b>Клиентов:</b> 20</label>
-                    <label class="name"><b>Возвратов:</b> 20</label>
-                    
-                    <label class="name">Ваш магазин по умолчанию</label>
-                    <div class="value">
-                        <select name="shop" id="shop" required>
-                            <option value="" disabled selected>Выбрать</option>
-                            <option value="5">Адрес 1</option>
-                            <option value="20">Адрес id20</option>
-                            <option value="21">Адрес</option>
-                            <option value="30">Адрес</option>
-                            <option value="40">Адрес длинный 555</option>
-                        </select>
-                    </div>
-                </form>
             </div>
         `);
     },
