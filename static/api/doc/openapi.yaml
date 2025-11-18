@@ -1,0 +1,232 @@
+openapi: 3.1.0
+info:
+  title: VET-system API
+  version: 1.0.0
+servers:
+  - url: https://api.example.com
+    description: Production
+  - url: http://localhost:8080
+    description: Local
+
+security:
+  - AuthHeader: []
+
+paths:
+  /api/record:
+    post:
+      summary: Создать новую запись (доступно всем, включая неавторизованных)
+      operationId: createRecord
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordCreateRequest'
+      responses:
+        '201':
+          description: Запись создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/record/{id}:
+    get:
+      summary: Получить запись по ID
+      operationId: getRecord
+      security:
+        - AuthHeader: []
+      parameters:
+        - $ref: '#/components/parameters/RecordId'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Доступ запрещён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Полностью заменить запись (только врач/админ)
+      operationId: replaceRecord
+      security:
+        - AuthHeader: [ doctor, admin ]
+      parameters:
+        - $ref: '#/components/parameters/RecordId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordReplaceRequest'
+      responses:
+        '200':
+          description: Запись обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      summary: Удалить запись (soft-delete), только врач/админ
+      operationId: deleteRecord
+      security:
+        - AuthHeader: [ doctor, admin ]
+      parameters:
+        - $ref: '#/components/parameters/RecordId'
+      responses:
+        '204':
+          description: Удалено (soft)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/records:
+    get:
+      summary: Список записей (только свои — для обычного пользователя)
+      operationId: listRecords
+      security:
+        - AuthHeader: []
+      responses:
+        '200':
+          description: Список записей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecordResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    AuthHeader:
+      type: apiKey
+      in: header
+      name: X-Auth-ID
+      description: ID пользователя из auth-системы
+
+  parameters:
+    RecordId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      description: ID записи
+
+  schemas:
+    RecordCreateRequest:
+      type: object
+      required: [fio, phone]
+      properties:
+        fio:
+          type: string
+        phone:
+          type: string
+
+    RecordReplaceRequest:
+      type: object
+      required: [fio, phone]
+      properties:
+        fio:
+          type: string
+        phone:
+          type: string
+        dateTime:
+          type: string
+          format: date-time
+        animalId:
+          type: integer
+        statusId:
+          type: integer
+        complaints:
+          type: string
+        examination:
+          type: string
+        recommendations:
+          type: string
+
+    RecordResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        fio:
+          type: string
+        phone:
+          type: string
+        dateTime:
+          type: string
+          format: date-time
+        statusId:
+          type: integer
+        clientId:
+          type: integer
+        animalId:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Неверный запрос
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Не авторизован
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Forbidden:
+      description: Недостаточно прав
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Запись не найдена
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
