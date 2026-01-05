@@ -13,6 +13,13 @@ http://localhost:8081/api/doc/
 podman ps -a
 
 
+## INIT
+in ROOT
+chmod +x make.sh
+./make.sh init
+
+
+
 
 
 ## Прочее
