@@ -1,8 +1,8 @@
 package postgres
 
 /*
-	1 Заменяем все RepoRecord
-	2 Заменяем все domain.Record
+	1 Заменяем все RepoClient
+	2 Заменяем все domain.Client
 	3 Меняем поля в Change (Важно в порядке columns)
 
 	В таблице всегда должны быть
@@ -21,24 +21,24 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type IRepoRecord interface {
-	Add(ctx context.Context, entity *domain.Record) (int64, error)
+type IRepoClient interface {
+	Add(ctx context.Context, entity *domain.Client) (int64, error)
 
-	Get(ctx context.Context, id int64) (*domain.Record, error)
-	GetBy(ctx context.Context, filterKey, filterValue string) (*domain.Record, error)
-	GetByInt(ctx context.Context, filterKey string, filterValue int64) (*domain.Record, error)
+	Get(ctx context.Context, id int64) (*domain.Client, error)
+	GetBy(ctx context.Context, filterKey, filterValue string) (*domain.Client, error)
+	GetByInt(ctx context.Context, filterKey string, filterValue int64) (*domain.Client, error)
 
-	List(ctx context.Context, offset, limit int64) ([]domain.Record, error)
-	ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.Record, error)
+	List(ctx context.Context, offset, limit int64) ([]domain.Client, error)
+	ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.Client, error)
 
-	Update(ctx context.Context, id int64, entity *domain.Record) error
-	UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.Record) error
+	Update(ctx context.Context, id int64, entity *domain.Client) error
+	UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.Client) error
 	UpdateColumn(ctx context.Context, id int64, key, value string) error
 
 	Delete(ctx context.Context, id int64, soft bool) error
 	DeleteBy(ctx context.Context, filterKey, filterValue string, soft bool) error
 }
-type RepoRecord struct {
+type RepoClient struct {
 	db               database.IDB
 	tableName        string
 	columns          []string
@@ -50,35 +50,26 @@ type RepoRecord struct {
 }
 
 // Change
-func NewRepoRecord(db database.IDB) *RepoRecord {
-	return &RepoRecord{
+func NewRepoClient(db database.IDB) *RepoClient {
+	return &RepoClient{
 		db:        db,
-		tableName: "records",
+		tableName: "clients",
 		columns: []string{
-			"timesheet_id", "date_time", "client_id", "user_id", "parent_id",
-			"parent_role_id", "status_id", "animal_id", "complaints",
-			"examination", "ds", "recommendations", "description",
+			"fio", "phone", "birth_date",
+			"parent_id", "description",
 		},
 	}
 }
-func (r *RepoRecord) scanEntityRow(row pgx.Row) (*domain.Record, error) {
-	var entity domain.Record
+func (r *RepoClient) scanEntityRow(row pgx.Row) (*domain.Client, error) {
+	var entity domain.Client
 
 	err := row.Scan(
 		&entity.ID,
 
-		&entity.TimesheetID,
-		&entity.DateTime,
-		&entity.ClientID,
-		&entity.UserID,
+		&entity.FIO,
+		&entity.Phone,
+		&entity.BirthDate,
 		&entity.ParentID,
-		&entity.ParentRoleID,
-		&entity.StatusID,
-		&entity.AnimalID,
-		&entity.Complaints,
-		&entity.Examination,
-		&entity.DS,
-		&entity.Recommendations,
 		&entity.Description,
 
 		&entity.CreatedAt,
@@ -94,7 +85,7 @@ func (r *RepoRecord) scanEntityRow(row pgx.Row) (*domain.Record, error) {
 
 	return &entity, nil
 }
-func (r *RepoRecord) Add(ctx context.Context, entity *domain.Record) (int64, error) {
+func (r *RepoClient) Add(ctx context.Context, entity *domain.Client) (int64, error) {
 	if entity == nil {
 		return 0, fmt.Errorf("%w: entity is nil", ErrInvalidInput)
 	}
@@ -112,18 +103,10 @@ func (r *RepoRecord) Add(ctx context.Context, entity *domain.Record) (int64, err
 	var id int64
 	err := r.db.QueryRow(ctx, query,
 
-		entity.TimesheetID,
-		entity.DateTime,
-		entity.ClientID,
-		entity.UserID,
+		entity.FIO,
+		entity.Phone,
+		entity.BirthDate,
 		entity.ParentID,
-		entity.ParentRoleID,
-		entity.StatusID,
-		entity.AnimalID,
-		entity.Complaints,
-		entity.Examination,
-		entity.DS,
-		entity.Recommendations,
 		entity.Description,
 
 		entity.CreatedAt,
@@ -138,7 +121,7 @@ func (r *RepoRecord) Add(ctx context.Context, entity *domain.Record) (int64, err
 
 	return id, nil
 }
-func (r *RepoRecord) Update(ctx context.Context, id int64, entity *domain.Record) error {
+func (r *RepoClient) Update(ctx context.Context, id int64, entity *domain.Client) error {
 	if id <= 0 {
 		return fmt.Errorf("%w: invalid id %d", ErrInvalidInput, id)
 	}
@@ -155,18 +138,10 @@ func (r *RepoRecord) Update(ctx context.Context, id int64, entity *domain.Record
 
 	_, err := r.db.Exec(ctx, query,
 
-		entity.TimesheetID,
-		entity.DateTime,
-		entity.ClientID,
-		entity.UserID,
+		entity.FIO,
+		entity.Phone,
+		entity.BirthDate,
 		entity.ParentID,
-		entity.ParentRoleID,
-		entity.StatusID,
-		entity.AnimalID,
-		entity.Complaints,
-		entity.Examination,
-		entity.DS,
-		entity.Recommendations,
 		entity.Description,
 
 		entity.UpdatedAt,
@@ -179,7 +154,7 @@ func (r *RepoRecord) Update(ctx context.Context, id int64, entity *domain.Record
 
 	return nil
 }
-func (r *RepoRecord) UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.Record) error {
+func (r *RepoClient) UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.Client) error {
 	if entity == nil {
 		return fmt.Errorf("%w: entity is nil", ErrInvalidInput)
 	}
@@ -196,18 +171,10 @@ func (r *RepoRecord) UpdateBy(ctx context.Context, filterKey, filterValue string
 
 	_, err := r.db.Exec(ctx, query,
 
-		entity.TimesheetID,
-		entity.DateTime,
-		entity.ClientID,
-		entity.UserID,
+		entity.FIO,
+		entity.Phone,
+		entity.BirthDate,
 		entity.ParentID,
-		entity.ParentRoleID,
-		entity.StatusID,
-		entity.AnimalID,
-		entity.Complaints,
-		entity.Examination,
-		entity.DS,
-		entity.Recommendations,
 		entity.Description,
 
 		entity.UpdatedAt,
@@ -222,7 +189,7 @@ func (r *RepoRecord) UpdateBy(ctx context.Context, filterKey, filterValue string
 }
 
 // Not Change
-func (r *RepoRecord) Get(ctx context.Context, id int64) (*domain.Record, error) {
+func (r *RepoClient) Get(ctx context.Context, id int64) (*domain.Client, error) {
 	if id <= 0 {
 		return nil, fmt.Errorf("%w: invalid id %d", ErrInvalidInput, id)
 	}
@@ -238,7 +205,7 @@ func (r *RepoRecord) Get(ctx context.Context, id int64) (*domain.Record, error) 
 
 	return r.scanEntityRow(row)
 }
-func (r *RepoRecord) GetBy(ctx context.Context, filterKey, filterValue string) (*domain.Record, error) {
+func (r *RepoClient) GetBy(ctx context.Context, filterKey, filterValue string) (*domain.Client, error) {
 	if err := r.validateColumn(filterKey); err != nil {
 		return nil, err
 	}
@@ -254,7 +221,7 @@ func (r *RepoRecord) GetBy(ctx context.Context, filterKey, filterValue string) (
 
 	return r.scanEntityRow(row)
 }
-func (r *RepoRecord) GetByInt(ctx context.Context, filterKey string, filterValue int64) (*domain.Record, error) {
+func (r *RepoClient) GetByInt(ctx context.Context, filterKey string, filterValue int64) (*domain.Client, error) {
 	if err := r.validateColumn(filterKey); err != nil {
 		return nil, err
 	}
@@ -270,7 +237,7 @@ func (r *RepoRecord) GetByInt(ctx context.Context, filterKey string, filterValue
 
 	return r.scanEntityRow(row)
 }
-func (r *RepoRecord) List(ctx context.Context, offset, limit int64) ([]domain.Record, error) {
+func (r *RepoClient) List(ctx context.Context, offset, limit int64) ([]domain.Client, error) {
 	var queryEnd string
 	if offset != 0 || limit != 0 {
 		queryEnd = fmt.Sprintf("ORDER BY id LIMIT %d OFFSET %d", limit, offset)
@@ -289,7 +256,7 @@ func (r *RepoRecord) List(ctx context.Context, offset, limit int64) ([]domain.Re
 
 	return r.scanEntityRows(rows)
 }
-func (r *RepoRecord) ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.Record, error) {
+func (r *RepoClient) ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.Client, error) {
 	var queryEnd string
 	if offset != 0 || limit != 0 {
 		queryEnd = fmt.Sprintf("ORDER BY id LIMIT %d OFFSET %d", limit, offset)
@@ -313,7 +280,7 @@ func (r *RepoRecord) ListBy(ctx context.Context, filterKey, filterValue string, 
 
 	return r.scanEntityRows(rows)
 }
-func (r *RepoRecord) UpdateColumn(ctx context.Context, id int64, key, value string) error {
+func (r *RepoClient) UpdateColumn(ctx context.Context, id int64, key, value string) error {
 	var err error
 	if err = r.validateColumn(key); err != nil {
 		return err
@@ -347,7 +314,7 @@ func (r *RepoRecord) UpdateColumn(ctx context.Context, id int64, key, value stri
 
 	return nil
 }
-func (r *RepoRecord) Delete(ctx context.Context, id int64, soft bool) error {
+func (r *RepoClient) Delete(ctx context.Context, id int64, soft bool) error {
 	if id <= 0 {
 		return fmt.Errorf("%w: invalid id %d", ErrInvalidInput, id)
 	}
@@ -371,7 +338,7 @@ func (r *RepoRecord) Delete(ctx context.Context, id int64, soft bool) error {
 
 	return nil
 }
-func (r *RepoRecord) DeleteBy(ctx context.Context, filterKey, filterValue string, soft bool) error {
+func (r *RepoClient) DeleteBy(ctx context.Context, filterKey, filterValue string, soft bool) error {
 	if err := r.validateColumn(filterKey); err != nil {
 		return err
 	}
@@ -397,7 +364,7 @@ func (r *RepoRecord) DeleteBy(ctx context.Context, filterKey, filterValue string
 }
 
 // Not Change Utils
-func (r *RepoRecord) getColumnsStr() string {
+func (r *RepoClient) getColumnsStr() string {
 	if r.columnsStr == "" {
 		r.columnsStr = fmt.Sprintf(
 			"%s, created_at, updated_at",
@@ -406,7 +373,7 @@ func (r *RepoRecord) getColumnsStr() string {
 	}
 	return r.columnsStr
 }
-func (r *RepoRecord) getColumnsStrUpdate() string {
+func (r *RepoClient) getColumnsStrUpdate() string {
 	if r.columnsStrUpdate == "" {
 		tmpI := len(r.columns)
 		tmp := make([]string, tmpI)
@@ -421,14 +388,14 @@ func (r *RepoRecord) getColumnsStrUpdate() string {
 	}
 	return r.columnsStrUpdate
 }
-func (r *RepoRecord) getColumnsUpdateI() int {
+func (r *RepoClient) getColumnsUpdateI() int {
 	if r.columnsUpdateI == 0 {
 		r.columnsUpdateI = len(r.columns) + 2
 	}
 
 	return r.columnsUpdateI
 }
-func (r *RepoRecord) getColumnsInput() string {
+func (r *RepoClient) getColumnsInput() string {
 	if r.columnsInput == "" {
 		var result []string
 		kol := r.getColumnsUpdateI()
@@ -440,7 +407,7 @@ func (r *RepoRecord) getColumnsInput() string {
 
 	return r.columnsInput
 }
-func (r *RepoRecord) getColumnsMap() map[string]struct{} {
+func (r *RepoClient) getColumnsMap() map[string]struct{} {
 	if r.columnsMap == nil {
 		r.columnsMap = make(map[string]struct{})
 		for _, name := range r.columns {
@@ -450,7 +417,7 @@ func (r *RepoRecord) getColumnsMap() map[string]struct{} {
 
 	return r.columnsMap
 }
-func (r *RepoRecord) validateColumn(key string) error {
+func (r *RepoClient) validateColumn(key string) error {
 	columnsMap := r.getColumnsMap()
 	if _, ok := columnsMap[key]; !ok {
 		return fmt.Errorf("%w: %q", ErrUnsupported, key)
@@ -458,10 +425,10 @@ func (r *RepoRecord) validateColumn(key string) error {
 
 	return nil
 }
-func (r *RepoRecord) scanEntityRows(rows pgx.Rows) ([]domain.Record, error) {
+func (r *RepoClient) scanEntityRows(rows pgx.Rows) ([]domain.Client, error) {
 	defer rows.Close()
 
-	var entities []domain.Record
+	var entities []domain.Client
 	for rows.Next() {
 		e, err := r.scanEntityRow(rows)
 		if err != nil {

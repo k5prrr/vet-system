@@ -12,9 +12,9 @@ type Record struct {
 	UserID   int64 `json:"userID" gorm:"column:user_id;not null"`     // На какого врача запись
 
 	ParentID     int64 `json:"parentID" gorm:"column:parent_id;not null"`          // создатель
-	ParentRoleID int   `json:"parentRoleID" gorm:"column:parent_role_id;not null"` // Роль создателя
+	ParentRoleID int64 `json:"parentRoleID" gorm:"column:parent_role_id;not null"` // Роль создателя
 
-	StatusID int `json:"statusID" gorm:"column:status_id;not null"` // Статус
+	StatusID int64 `json:"statusID" gorm:"column:status_id;not null"` // Статус
 
 	AnimalID int64 `json:"animalID" gorm:"column:animal_id;not null"` // Животное
 
@@ -24,7 +24,6 @@ type Record struct {
 	Recommendations string  `json:"recommendations" gorm:"column:recommendations;not null;type:text"` // Рекомендации
 	Description     *string `json:"description" gorm:"column:description;type:text"`                  // Доп описание
 
-	CreatedAt time.Time  `json:"createdAt" gorm:"column:created_at;autoCreateTime"`
-	UpdatedAt time.Time  `json:"updatedAt" gorm:"column:updated_at;autoUpdateTime"`
-	DeletedAt *time.Time `json:"deletedAt,omitempty" gorm:"column:deleted_at;index"` // soft delete (если понадобится позже)
+	CreatedAt time.Time `json:"createdAt" gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt time.Time `json:"updatedAt" gorm:"column:updated_at;autoUpdateTime"`
 }

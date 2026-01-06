@@ -19,8 +19,14 @@ type dependencyInjection struct {
 	db        database.IDB
 	migration *migration.Migration
 
-	repoUser   port.IRepoUser
-	repoRecord port.IRepoRecord
+	repoClient       port.IRepoClient
+	repoTimesheet    port.IRepoTimesheet
+	repoAnimal       port.IRepoAnimal
+	repoAnimalType   port.IRepoAnimalType
+	repoUser         port.IRepoUser
+	repoUserRole     port.IRepoUserRole
+	repoRecord       port.IRepoRecord
+	repoRecordStatus port.IRepoRecordStatus
 
 	service *service.Service
 	useCase port.IUseCase
@@ -67,6 +73,34 @@ func (d *dependencyInjection) Migration() *migration.Migration {
 	return d.migration
 }
 
+func (d *dependencyInjection) RepoClient() port.IRepoClient {
+	if d.repoClient == nil {
+		d.repoClient = postgres.NewRepoClient(d.DB())
+	}
+
+	return d.repoClient
+}
+func (d *dependencyInjection) RepoTimesheet() port.IRepoTimesheet {
+	if d.repoTimesheet == nil {
+		d.repoTimesheet = postgres.NewRepoTimesheet(d.DB())
+	}
+
+	return d.repoTimesheet
+}
+func (d *dependencyInjection) RepoAnimal() port.IRepoAnimal {
+	if d.repoAnimal == nil {
+		d.repoAnimal = postgres.NewRepoAnimal(d.DB())
+	}
+
+	return d.repoAnimal
+}
+func (d *dependencyInjection) RepoAnimalType() port.IRepoAnimalType {
+	if d.repoAnimalType == nil {
+		d.repoAnimalType = postgres.NewRepoAnimalType(d.DB())
+	}
+
+	return d.repoAnimalType
+}
 func (d *dependencyInjection) RepoUser() port.IRepoUser {
 	if d.repoUser == nil {
 		d.repoUser = postgres.NewRepoUser(d.DB())
@@ -74,7 +108,13 @@ func (d *dependencyInjection) RepoUser() port.IRepoUser {
 
 	return d.repoUser
 }
+func (d *dependencyInjection) RepoUserRole() port.IRepoUserRole {
+	if d.repoUserRole == nil {
+		d.repoUserRole = postgres.NewRepoUserRole(d.DB())
+	}
 
+	return d.repoUserRole
+}
 func (d *dependencyInjection) RepoRecord() port.IRepoRecord {
 	if d.repoRecord == nil {
 		d.repoRecord = postgres.NewRepoRecord(d.DB())
@@ -82,14 +122,27 @@ func (d *dependencyInjection) RepoRecord() port.IRepoRecord {
 
 	return d.repoRecord
 }
+func (d *dependencyInjection) RepoRecordStatus() port.IRepoRecordStatus {
+	if d.repoRecordStatus == nil {
+		d.repoRecordStatus = postgres.NewRepoRecordStatus(d.DB())
+	}
+
+	return d.repoRecordStatus
+}
 
 func (d *dependencyInjection) Services() *service.Service {
 	if d.service == nil {
 		conf := d.Conf()
 		d.service = service.New(
 			conf.Get("APP_SALT", ""),
+			d.RepoClient(),
+			d.RepoTimesheet(),
+			d.RepoAnimal(),
+			d.RepoAnimalType(),
 			d.RepoUser(),
+			d.RepoUserRole(),
 			d.RepoRecord(),
+			d.RepoRecordStatus(),
 		)
 	}
 

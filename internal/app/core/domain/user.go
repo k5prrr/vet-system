@@ -7,7 +7,7 @@ import (
 // ./internal/app/core/domain/user.go
 type User struct {
 	ID          int64   `json:"id" gorm:"primaryKey;column:id;autoIncrement"`
-	FIO         *string `json:"fio" gorm:"column:fio;type:varchar;not null"`
+	FIO         string  `json:"fio" gorm:"column:fio;type:varchar;not null"`
 	RoleID      int64   `json:"roleID" gorm:"column:role_id;not null"`
 	Phone       string  `json:"phone" gorm:"column:phone;type:varchar(255);not null;index"`
 	ParentID    int64   `json:"parentID" gorm:"column:parent_id;not null"`
@@ -18,12 +18,11 @@ type User struct {
 	UpdatedAt time.Time `json:"updatedAt" gorm:"column:updated_at;not null;autoUpdateTime"`
 }
 
+/*
 type UserGroup struct {
 	ID   int64
 	Name string
 }
-
-/*
 (1,	'Админ'),
 (2,	'Менеджер'),
 (3,	'Продавец'),

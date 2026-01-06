@@ -5,19 +5,37 @@ import (
 )
 
 type Service struct {
-	salt       []byte
-	RepoUser   port.IRepoUser
-	RepoRecord port.IRepoRecord
+	salt             []byte
+	RepoClient       port.IRepoClient
+	RepoTimesheet    port.IRepoTimesheet
+	RepoAnimal       port.IRepoAnimal
+	RepoAnimalType   port.IRepoAnimalType
+	RepoUser         port.IRepoUser
+	RepoUserRole     port.IRepoUserRole
+	RepoRecord       port.IRepoRecord
+	RepoRecordStatus port.IRepoRecordStatus
 }
 
 func New(
 	salt string,
+	repoClient port.IRepoClient,
+	repoTimesheet port.IRepoTimesheet,
+	repoAnimal port.IRepoAnimal,
+	repoAnimalType port.IRepoAnimalType,
 	repoUser port.IRepoUser,
+	repoUserRole port.IRepoUserRole,
 	repoRecord port.IRepoRecord,
+	repoRecordStatus port.IRepoRecordStatus,
 ) *Service {
 	return &Service{
-		salt:       []byte(salt),
-		RepoUser:   repoUser,
-		RepoRecord: repoRecord,
+		salt:             []byte(salt),
+		RepoClient:       repoClient,
+		RepoTimesheet:    repoTimesheet,
+		RepoAnimal:       repoAnimal,
+		RepoAnimalType:   repoAnimalType,
+		RepoUser:         repoUser,
+		RepoUserRole:     repoUserRole,
+		RepoRecord:       repoRecord,
+		RepoRecordStatus: repoRecordStatus,
 	}
 }

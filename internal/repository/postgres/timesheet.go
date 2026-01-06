@@ -1,8 +1,8 @@
 package postgres
 
 /*
-	1 Заменяем все RepoRecord
-	2 Заменяем все domain.Record
+	1 Заменяем все RepoTimesheet
+	2 Заменяем все domain.Timesheet
 	3 Меняем поля в Change (Важно в порядке columns)
 
 	В таблице всегда должны быть
@@ -21,24 +21,24 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type IRepoRecord interface {
-	Add(ctx context.Context, entity *domain.Record) (int64, error)
+type IRepoTimesheet interface {
+	Add(ctx context.Context, entity *domain.Timesheet) (int64, error)
 
-	Get(ctx context.Context, id int64) (*domain.Record, error)
-	GetBy(ctx context.Context, filterKey, filterValue string) (*domain.Record, error)
-	GetByInt(ctx context.Context, filterKey string, filterValue int64) (*domain.Record, error)
+	Get(ctx context.Context, id int64) (*domain.Timesheet, error)
+	GetBy(ctx context.Context, filterKey, filterValue string) (*domain.Timesheet, error)
+	GetByInt(ctx context.Context, filterKey string, filterValue int64) (*domain.Timesheet, error)
 
-	List(ctx context.Context, offset, limit int64) ([]domain.Record, error)
-	ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.Record, error)
+	List(ctx context.Context, offset, limit int64) ([]domain.Timesheet, error)
+	ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.Timesheet, error)
 
-	Update(ctx context.Context, id int64, entity *domain.Record) error
-	UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.Record) error
+	Update(ctx context.Context, id int64, entity *domain.Timesheet) error
+	UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.Timesheet) error
 	UpdateColumn(ctx context.Context, id int64, key, value string) error
 
 	Delete(ctx context.Context, id int64, soft bool) error
 	DeleteBy(ctx context.Context, filterKey, filterValue string, soft bool) error
 }
-type RepoRecord struct {
+type RepoTimesheet struct {
 	db               database.IDB
 	tableName        string
 	columns          []string
@@ -50,36 +50,24 @@ type RepoRecord struct {
 }
 
 // Change
-func NewRepoRecord(db database.IDB) *RepoRecord {
-	return &RepoRecord{
+func NewRepoTimesheet(db database.IDB) *RepoTimesheet {
+	return &RepoTimesheet{
 		db:        db,
-		tableName: "records",
+		tableName: "timesheet",
 		columns: []string{
-			"timesheet_id", "date_time", "client_id", "user_id", "parent_id",
-			"parent_role_id", "status_id", "animal_id", "complaints",
-			"examination", "ds", "recommendations", "description",
+			"user_id", "parent_id", "date",
 		},
 	}
 }
-func (r *RepoRecord) scanEntityRow(row pgx.Row) (*domain.Record, error) {
-	var entity domain.Record
+func (r *RepoTimesheet) scanEntityRow(row pgx.Row) (*domain.Timesheet, error) {
+	var entity domain.Timesheet
 
 	err := row.Scan(
 		&entity.ID,
 
-		&entity.TimesheetID,
-		&entity.DateTime,
-		&entity.ClientID,
 		&entity.UserID,
 		&entity.ParentID,
-		&entity.ParentRoleID,
-		&entity.StatusID,
-		&entity.AnimalID,
-		&entity.Complaints,
-		&entity.Examination,
-		&entity.DS,
-		&entity.Recommendations,
-		&entity.Description,
+		&entity.Date,
 
 		&entity.CreatedAt,
 		&entity.UpdatedAt,
@@ -94,7 +82,7 @@ func (r *RepoRecord) scanEntityRow(row pgx.Row) (*domain.Record, error) {
 
 	return &entity, nil
 }
-func (r *RepoRecord) Add(ctx context.Context, entity *domain.Record) (int64, error) {
+func (r *RepoTimesheet) Add(ctx context.Context, entity *domain.Timesheet) (int64, error) {
 	if entity == nil {
 		return 0, fmt.Errorf("%w: entity is nil", ErrInvalidInput)
 	}
@@ -112,19 +100,9 @@ func (r *RepoRecord) Add(ctx context.Context, entity *domain.Record) (int64, err
 	var id int64
 	err := r.db.QueryRow(ctx, query,
 
-		entity.TimesheetID,
-		entity.DateTime,
-		entity.ClientID,
 		entity.UserID,
 		entity.ParentID,
-		entity.ParentRoleID,
-		entity.StatusID,
-		entity.AnimalID,
-		entity.Complaints,
-		entity.Examination,
-		entity.DS,
-		entity.Recommendations,
-		entity.Description,
+		entity.Date,
 
 		entity.CreatedAt,
 		entity.UpdatedAt,
@@ -138,7 +116,7 @@ func (r *RepoRecord) Add(ctx context.Context, entity *domain.Record) (int64, err
 
 	return id, nil
 }
-func (r *RepoRecord) Update(ctx context.Context, id int64, entity *domain.Record) error {
+func (r *RepoTimesheet) Update(ctx context.Context, id int64, entity *domain.Timesheet) error {
 	if id <= 0 {
 		return fmt.Errorf("%w: invalid id %d", ErrInvalidInput, id)
 	}
@@ -155,19 +133,9 @@ func (r *RepoRecord) Update(ctx context.Context, id int64, entity *domain.Record
 
 	_, err := r.db.Exec(ctx, query,
 
-		entity.TimesheetID,
-		entity.DateTime,
-		entity.ClientID,
 		entity.UserID,
 		entity.ParentID,
-		entity.ParentRoleID,
-		entity.StatusID,
-		entity.AnimalID,
-		entity.Complaints,
-		entity.Examination,
-		entity.DS,
-		entity.Recommendations,
-		entity.Description,
+		entity.Date,
 
 		entity.UpdatedAt,
 		id,
@@ -179,7 +147,7 @@ func (r *RepoRecord) Update(ctx context.Context, id int64, entity *domain.Record
 
 	return nil
 }
-func (r *RepoRecord) UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.Record) error {
+func (r *RepoTimesheet) UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.Timesheet) error {
 	if entity == nil {
 		return fmt.Errorf("%w: entity is nil", ErrInvalidInput)
 	}
@@ -196,19 +164,9 @@ func (r *RepoRecord) UpdateBy(ctx context.Context, filterKey, filterValue string
 
 	_, err := r.db.Exec(ctx, query,
 
-		entity.TimesheetID,
-		entity.DateTime,
-		entity.ClientID,
 		entity.UserID,
 		entity.ParentID,
-		entity.ParentRoleID,
-		entity.StatusID,
-		entity.AnimalID,
-		entity.Complaints,
-		entity.Examination,
-		entity.DS,
-		entity.Recommendations,
-		entity.Description,
+		entity.Date,
 
 		entity.UpdatedAt,
 		filterValue,
@@ -222,7 +180,7 @@ func (r *RepoRecord) UpdateBy(ctx context.Context, filterKey, filterValue string
 }
 
 // Not Change
-func (r *RepoRecord) Get(ctx context.Context, id int64) (*domain.Record, error) {
+func (r *RepoTimesheet) Get(ctx context.Context, id int64) (*domain.Timesheet, error) {
 	if id <= 0 {
 		return nil, fmt.Errorf("%w: invalid id %d", ErrInvalidInput, id)
 	}
@@ -238,7 +196,7 @@ func (r *RepoRecord) Get(ctx context.Context, id int64) (*domain.Record, error) 
 
 	return r.scanEntityRow(row)
 }
-func (r *RepoRecord) GetBy(ctx context.Context, filterKey, filterValue string) (*domain.Record, error) {
+func (r *RepoTimesheet) GetBy(ctx context.Context, filterKey, filterValue string) (*domain.Timesheet, error) {
 	if err := r.validateColumn(filterKey); err != nil {
 		return nil, err
 	}
@@ -254,7 +212,7 @@ func (r *RepoRecord) GetBy(ctx context.Context, filterKey, filterValue string) (
 
 	return r.scanEntityRow(row)
 }
-func (r *RepoRecord) GetByInt(ctx context.Context, filterKey string, filterValue int64) (*domain.Record, error) {
+func (r *RepoTimesheet) GetByInt(ctx context.Context, filterKey string, filterValue int64) (*domain.Timesheet, error) {
 	if err := r.validateColumn(filterKey); err != nil {
 		return nil, err
 	}
@@ -270,7 +228,7 @@ func (r *RepoRecord) GetByInt(ctx context.Context, filterKey string, filterValue
 
 	return r.scanEntityRow(row)
 }
-func (r *RepoRecord) List(ctx context.Context, offset, limit int64) ([]domain.Record, error) {
+func (r *RepoTimesheet) List(ctx context.Context, offset, limit int64) ([]domain.Timesheet, error) {
 	var queryEnd string
 	if offset != 0 || limit != 0 {
 		queryEnd = fmt.Sprintf("ORDER BY id LIMIT %d OFFSET %d", limit, offset)
@@ -289,7 +247,7 @@ func (r *RepoRecord) List(ctx context.Context, offset, limit int64) ([]domain.Re
 
 	return r.scanEntityRows(rows)
 }
-func (r *RepoRecord) ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.Record, error) {
+func (r *RepoTimesheet) ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.Timesheet, error) {
 	var queryEnd string
 	if offset != 0 || limit != 0 {
 		queryEnd = fmt.Sprintf("ORDER BY id LIMIT %d OFFSET %d", limit, offset)
@@ -313,7 +271,7 @@ func (r *RepoRecord) ListBy(ctx context.Context, filterKey, filterValue string, 
 
 	return r.scanEntityRows(rows)
 }
-func (r *RepoRecord) UpdateColumn(ctx context.Context, id int64, key, value string) error {
+func (r *RepoTimesheet) UpdateColumn(ctx context.Context, id int64, key, value string) error {
 	var err error
 	if err = r.validateColumn(key); err != nil {
 		return err
@@ -347,7 +305,7 @@ func (r *RepoRecord) UpdateColumn(ctx context.Context, id int64, key, value stri
 
 	return nil
 }
-func (r *RepoRecord) Delete(ctx context.Context, id int64, soft bool) error {
+func (r *RepoTimesheet) Delete(ctx context.Context, id int64, soft bool) error {
 	if id <= 0 {
 		return fmt.Errorf("%w: invalid id %d", ErrInvalidInput, id)
 	}
@@ -371,7 +329,7 @@ func (r *RepoRecord) Delete(ctx context.Context, id int64, soft bool) error {
 
 	return nil
 }
-func (r *RepoRecord) DeleteBy(ctx context.Context, filterKey, filterValue string, soft bool) error {
+func (r *RepoTimesheet) DeleteBy(ctx context.Context, filterKey, filterValue string, soft bool) error {
 	if err := r.validateColumn(filterKey); err != nil {
 		return err
 	}
@@ -397,7 +355,7 @@ func (r *RepoRecord) DeleteBy(ctx context.Context, filterKey, filterValue string
 }
 
 // Not Change Utils
-func (r *RepoRecord) getColumnsStr() string {
+func (r *RepoTimesheet) getColumnsStr() string {
 	if r.columnsStr == "" {
 		r.columnsStr = fmt.Sprintf(
 			"%s, created_at, updated_at",
@@ -406,7 +364,7 @@ func (r *RepoRecord) getColumnsStr() string {
 	}
 	return r.columnsStr
 }
-func (r *RepoRecord) getColumnsStrUpdate() string {
+func (r *RepoTimesheet) getColumnsStrUpdate() string {
 	if r.columnsStrUpdate == "" {
 		tmpI := len(r.columns)
 		tmp := make([]string, tmpI)
@@ -421,14 +379,14 @@ func (r *RepoRecord) getColumnsStrUpdate() string {
 	}
 	return r.columnsStrUpdate
 }
-func (r *RepoRecord) getColumnsUpdateI() int {
+func (r *RepoTimesheet) getColumnsUpdateI() int {
 	if r.columnsUpdateI == 0 {
 		r.columnsUpdateI = len(r.columns) + 2
 	}
 
 	return r.columnsUpdateI
 }
-func (r *RepoRecord) getColumnsInput() string {
+func (r *RepoTimesheet) getColumnsInput() string {
 	if r.columnsInput == "" {
 		var result []string
 		kol := r.getColumnsUpdateI()
@@ -440,7 +398,7 @@ func (r *RepoRecord) getColumnsInput() string {
 
 	return r.columnsInput
 }
-func (r *RepoRecord) getColumnsMap() map[string]struct{} {
+func (r *RepoTimesheet) getColumnsMap() map[string]struct{} {
 	if r.columnsMap == nil {
 		r.columnsMap = make(map[string]struct{})
 		for _, name := range r.columns {
@@ -450,7 +408,7 @@ func (r *RepoRecord) getColumnsMap() map[string]struct{} {
 
 	return r.columnsMap
 }
-func (r *RepoRecord) validateColumn(key string) error {
+func (r *RepoTimesheet) validateColumn(key string) error {
 	columnsMap := r.getColumnsMap()
 	if _, ok := columnsMap[key]; !ok {
 		return fmt.Errorf("%w: %q", ErrUnsupported, key)
@@ -458,10 +416,10 @@ func (r *RepoRecord) validateColumn(key string) error {
 
 	return nil
 }
-func (r *RepoRecord) scanEntityRows(rows pgx.Rows) ([]domain.Record, error) {
+func (r *RepoTimesheet) scanEntityRows(rows pgx.Rows) ([]domain.Timesheet, error) {
 	defer rows.Close()
 
-	var entities []domain.Record
+	var entities []domain.Timesheet
 	for rows.Next() {
 		e, err := r.scanEntityRow(rows)
 		if err != nil {
