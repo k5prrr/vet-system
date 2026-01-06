@@ -1,35 +1,21 @@
 package domain
 
 import (
-	"fmt"
 	"time"
 )
 
+// ./internal/app/core/domain/user.go
 type User struct {
-	ID         int64
-	FamilyName *string
-	Name       *string
-	MiddleName *string
+	ID          int64   `json:"id" gorm:"primaryKey;column:id;autoIncrement"`
+	FIO         *string `json:"fio" gorm:"column:fio;type:varchar;not null"`
+	RoleID      int64   `json:"roleID" gorm:"column:role_id;not null"`
+	Phone       string  `json:"phone" gorm:"column:phone;type:varchar(255);not null;index"`
+	ParentID    int64   `json:"parentID" gorm:"column:parent_id;not null"`
+	Description *string `json:"description,omitempty" gorm:"column:description;type:text"`
+	AuthSecret  string  `json:"authSecret" gorm:"column:auth_secret;not null"`
 
-	Phone     string
-	Email     *string
-	BirthDate *time.Time `json:"birth_date" gorm:"column:birth_date;type:date"` // может быть NULL
-
-	ParentID *int64 `json:"parent_id" gorm:"column:parent_id"` // может быть NULL
-	GenderID *int   `json:"gender_id" gorm:"column:gender_id"` // может быть NULL
-	RoleID   *int64 `json:"role_id" gorm:"column:role_id"`     // может быть NULL
-
-	CreatedAt time.Time `json:"created_at" gorm:"column:created_at;not null;autoCreateTime"`
-	UpdatedAt time.Time `json:"updated_at" gorm:"column:updated_at;not null;autoUpdateTime"`
-}
-
-func (u *User) FullName() string {
-	return fmt.Sprintf(
-		"%s %s %s",
-		u.FamilyName,
-		u.Name,
-		u.MiddleName,
-	)
+	CreatedAt time.Time `json:"createdAt" gorm:"column:created_at;not null;autoCreateTime"`
+	UpdatedAt time.Time `json:"updatedAt" gorm:"column:updated_at;not null;autoUpdateTime"`
 }
 
 type UserGroup struct {
@@ -43,19 +29,3 @@ type UserGroup struct {
 (3,	'Продавец'),
 (4,	'Новый');
 */
-
-type Auth struct {
-	ID          int64
-	UserID      int64
-	TgID        int64
-	Code        *string
-	Secret      string
-	LastLoginAt *time.Time
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-}
-
-type UserFull struct {
-	User *User
-	Auth *Auth
-}

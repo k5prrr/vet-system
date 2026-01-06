@@ -19,8 +19,8 @@ type dependencyInjection struct {
 	db        database.IDB
 	migration *migration.Migration
 
-	repoUser port.IRepoUser
-	repoAuth port.IRepoAuth
+	repoUser   port.IRepoUser
+	repoRecord port.IRepoRecord
 
 	service *service.Service
 	useCase port.IUseCase
@@ -74,12 +74,13 @@ func (d *dependencyInjection) RepoUser() port.IRepoUser {
 
 	return d.repoUser
 }
-func (d *dependencyInjection) RepoAuth() port.IRepoAuth {
-	if d.repoAuth == nil {
-		d.repoAuth = postgres.NewRepoAuth(d.DB())
+
+func (d *dependencyInjection) RepoRecord() port.IRepoRecord {
+	if d.repoRecord == nil {
+		d.repoRecord = postgres.NewRepoRecord(d.DB())
 	}
 
-	return d.repoAuth
+	return d.repoRecord
 }
 
 func (d *dependencyInjection) Services() *service.Service {
@@ -88,7 +89,7 @@ func (d *dependencyInjection) Services() *service.Service {
 		d.service = service.New(
 			conf.Get("APP_SALT", ""),
 			d.RepoUser(),
-			d.RepoAuth(),
+			d.RepoRecord(),
 		)
 	}
 

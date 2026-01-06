@@ -1,13 +1,5 @@
 package usecase
 
-import (
-	"app/internal/app/core/domain"
-	"context"
-	"errors"
-	"fmt"
-	"time"
-)
-
 /*
 func (u *UseCase) CreateCodeCheckPhone(ctx context.Context, action string) (string, error) {
 	if action != "registration" && action != "client" {
@@ -103,6 +95,7 @@ func (u *UseCase) SendAuthCode(ctx context.Context, phone int64) error {
 		return nil
 	}
 */
+/*
 func (u *UseCase) CreateUser(ctx context.Context, tgID int64, phone string) (int64, error) {
 	var err error
 
@@ -200,3 +193,5 @@ func (u *UseCase) CheckAuthCode(ctx context.Context, phone, code string) (string
 func (u *UseCase) CurrentUser(ctx context.Context, token string) (*domain.UserFull, error) {
 	return u.service.CurrentUser(ctx, token)
 }
+
+*/

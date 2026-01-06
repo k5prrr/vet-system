@@ -55,8 +55,7 @@ func NewRepoUser(db database.IDB) *RepoUser {
 		db:        db,
 		tableName: "users",
 		columns: []string{
-			"family_name", "name", "middle_name", "phone", "email",
-			"birth_date", "parent_id", "gender_id", "role_id",
+			"fio", "role_id", "phone", "parent_id", "description", "auth_secret",
 		},
 	}
 }
@@ -66,15 +65,12 @@ func (r *RepoUser) scanEntityRow(row pgx.Row) (*domain.User, error) {
 	err := row.Scan(
 		&entity.ID,
 
-		&entity.FamilyName,
-		&entity.Name,
-		&entity.MiddleName,
-		&entity.Phone,
-		&entity.Email,
-		&entity.BirthDate,
-		&entity.ParentID,
-		&entity.GenderID,
+		&entity.FIO,
 		&entity.RoleID,
+		&entity.Phone,
+		&entity.ParentID,
+		&entity.Description,
+		&entity.AuthSecret,
 
 		&entity.CreatedAt,
 		&entity.UpdatedAt,
@@ -107,15 +103,12 @@ func (r *RepoUser) Add(ctx context.Context, entity *domain.User) (int64, error) 
 	var id int64
 	err := r.db.QueryRow(ctx, query,
 
-		entity.FamilyName,
-		entity.Name,
-		entity.MiddleName,
-		entity.Phone,
-		entity.Email,
-		entity.BirthDate,
-		entity.ParentID,
-		entity.GenderID,
+		entity.FIO,
 		entity.RoleID,
+		entity.Phone,
+		entity.ParentID,
+		entity.Description,
+		entity.AuthSecret,
 
 		entity.CreatedAt,
 		entity.UpdatedAt,
@@ -146,15 +139,12 @@ func (r *RepoUser) Update(ctx context.Context, id int64, entity *domain.User) er
 
 	_, err := r.db.Exec(ctx, query,
 
-		entity.FamilyName,
-		entity.Name,
-		entity.MiddleName,
-		entity.Phone,
-		entity.Email,
-		entity.BirthDate,
-		entity.ParentID,
-		entity.GenderID,
+		entity.FIO,
 		entity.RoleID,
+		entity.Phone,
+		entity.ParentID,
+		entity.Description,
+		entity.AuthSecret,
 
 		entity.UpdatedAt,
 		id,
@@ -183,15 +173,12 @@ func (r *RepoUser) UpdateBy(ctx context.Context, filterKey, filterValue string, 
 
 	_, err := r.db.Exec(ctx, query,
 
-		entity.FamilyName,
-		entity.Name,
-		entity.MiddleName,
-		entity.Phone,
-		entity.Email,
-		entity.BirthDate,
-		entity.ParentID,
-		entity.GenderID,
+		entity.FIO,
 		entity.RoleID,
+		entity.Phone,
+		entity.ParentID,
+		entity.Description,
+		entity.AuthSecret,
 
 		entity.UpdatedAt,
 		filterValue,

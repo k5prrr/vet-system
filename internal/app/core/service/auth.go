@@ -1,19 +1,6 @@
 package service
 
-import (
-	"app/internal/app/core/domain"
-	"bytes"
-	"context"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/base64"
-	"encoding/hex"
-	"fmt"
-	"math/rand"
-	"strconv"
-	"time"
-)
-
+/*
 func (s *Service) Secret(nBytes int) (string, error) {
 	b := make([]byte, nBytes)
 	if _, err := rand.Read(b); err != nil {
@@ -143,3 +130,4 @@ func (s *Service) UserAuthByPhone(ctx context.Context, phone string) (*domain.Us
 		Auth: auth,
 	}, nil
 }
+*/

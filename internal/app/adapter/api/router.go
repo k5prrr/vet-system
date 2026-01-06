@@ -20,7 +20,6 @@ func New(useCase port.IUseCase) *Router {
 	return r
 }
 func (r *Router) init() {
-	r.HandleFunc("/api/bot", r.showBot) // Только ссылка на бот
 	r.HandleFunc("/api/test1", r.test1)
 
 	r.mux.Handle("/",
@@ -28,15 +27,6 @@ func (r *Router) init() {
 			http.FileServer(http.Dir("./static/")),
 		),
 	)
-	r.mux.Handle("/api/doc/",
-		http.StripPrefix("/api/doc/",
-			http.FileServer(http.Dir("./docs/static/")),
-		),
-	)
-
-}
-func (r *Router) showBot(w http.ResponseWriter, req *http.Request) {
-	json.NewEncoder(w).Encode(map[string]string{})
 }
 
 func (r *Router) test1(w http.ResponseWriter, req *http.Request) {

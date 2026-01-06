@@ -1,5 +1,7 @@
 ## поднимает БД и adminer 
+podman-compose down
 podman-compose -f db.yml up -d
+podman ps -a
 http://localhost:45010/
 
 ## Поднятие WEB front для теста

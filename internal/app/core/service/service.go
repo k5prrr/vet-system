@@ -5,22 +5,19 @@ import (
 )
 
 type Service struct {
-	salt     []byte
-	Tg       port.Itg
-	MapAuth  port.IMapAuth
-	Repo     port.IRepo
-	RepoUser port.IRepoUser
-	RepoAuth port.IRepoAuth
+	salt       []byte
+	RepoUser   port.IRepoUser
+	RepoRecord port.IRepoRecord
 }
 
 func New(
 	salt string,
 	repoUser port.IRepoUser,
-	repoAuth port.IRepoAuth,
+	repoRecord port.IRepoRecord,
 ) *Service {
 	return &Service{
-		salt:     []byte(salt),
-		RepoUser: repoUser,
-		RepoAuth: repoAuth,
+		salt:       []byte(salt),
+		RepoUser:   repoUser,
+		RepoRecord: repoRecord,
 	}
 }

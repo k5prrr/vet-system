@@ -21,6 +21,23 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+type IRepoRecord interface {
+	Add(ctx context.Context, entity *domain.Record) (int64, error)
+
+	Get(ctx context.Context, id int64) (*domain.Record, error)
+	GetBy(ctx context.Context, filterKey, filterValue string) (*domain.Record, error)
+	GetByInt(ctx context.Context, filterKey string, filterValue int64) (*domain.Record, error)
+
+	List(ctx context.Context, offset, limit int64) ([]domain.Record, error)
+	ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.Record, error)
+
+	Update(ctx context.Context, id int64, entity *domain.Record) error
+	UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.Record) error
+	UpdateColumn(ctx context.Context, id int64, key, value string) error
+
+	Delete(ctx context.Context, id int64, soft bool) error
+	DeleteBy(ctx context.Context, filterKey, filterValue string, soft bool) error
+}
 type RepoRecord struct {
 	db               database.IDB
 	tableName        string
@@ -39,7 +56,7 @@ func NewRepoRecord(db database.IDB) *RepoRecord {
 		tableName: "users",
 		columns: []string{
 			"timesheet_id", "date_time", "client_id", "user_id", "parent_id",
-			"parent_tupe", "status_id", "animal_id", "complaints",
+			"parent_role_id", "status_id", "animal_id", "complaints",
 			"examination", "ds", "recommendations", "description",
 		},
 	}
@@ -55,7 +72,7 @@ func (r *RepoRecord) scanEntityRow(row pgx.Row) (*domain.Record, error) {
 		&entity.ClientID,
 		&entity.UserID,
 		&entity.ParentID,
-		&entity.ParentType,
+		&entity.ParentRoleID,
 		&entity.StatusID,
 		&entity.AnimalID,
 		&entity.Complaints,
@@ -100,7 +117,7 @@ func (r *RepoRecord) Add(ctx context.Context, entity *domain.Record) (int64, err
 		entity.ClientID,
 		entity.UserID,
 		entity.ParentID,
-		entity.ParentType,
+		entity.ParentRoleID,
 		entity.StatusID,
 		entity.AnimalID,
 		entity.Complaints,
@@ -143,7 +160,7 @@ func (r *RepoRecord) Update(ctx context.Context, id int64, entity *domain.Record
 		entity.ClientID,
 		entity.UserID,
 		entity.ParentID,
-		entity.ParentType,
+		entity.ParentRoleID,
 		entity.StatusID,
 		entity.AnimalID,
 		entity.Complaints,
@@ -184,7 +201,7 @@ func (r *RepoRecord) UpdateBy(ctx context.Context, filterKey, filterValue string
 		entity.ClientID,
 		entity.UserID,
 		entity.ParentID,
-		entity.ParentType,
+		entity.ParentRoleID,
 		entity.StatusID,
 		entity.AnimalID,
 		entity.Complaints,

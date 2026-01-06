@@ -7,21 +7,15 @@ import (
 
 // Так, давай на первых этапах IUseCase будет как общий, а потом разделим
 type IUseCase interface {
-	CreateUser(ctx context.Context, tgID int64, phone string) (int64, error)
+	/*CreateUser(ctx context.Context, tgID int64, phone string) (int64, error)
 	SendAuthCode(ctx context.Context, phone string) error
 	CheckAuthCode(ctx context.Context, phone, code string) (string, error)
 
-	CurrentUser(ctx context.Context, token string) (*domain.UserFull, error)
-
+	CurrentUser(ctx context.Context, token string) (*domain.User, error)
+	*/
 	Test1() (*domain.User, error)
 }
 
-type Itg interface {
-	SendPhoto(chatID int64, urlPhoto string, message string, replyMarkup string) (string, error)
-	SendMessage(chatID int64, message string, replyMarkup string) (string, error)
-}
-
-type IRepo interface{}
 type IRepoUser interface {
 	Add(ctx context.Context, entity *domain.User) (int64, error)
 
@@ -39,26 +33,21 @@ type IRepoUser interface {
 	Delete(ctx context.Context, id int64, soft bool) error
 	DeleteBy(ctx context.Context, filterKey, filterValue string, soft bool) error
 }
-type IRepoAuth interface {
-	Add(ctx context.Context, entity *domain.Auth) (int64, error)
 
-	Get(ctx context.Context, id int64) (*domain.Auth, error)
-	GetBy(ctx context.Context, filterKey, filterValue string) (*domain.Auth, error)
-	GetByInt(ctx context.Context, filterKey string, filterValue int64) (*domain.Auth, error)
+type IRepoRecord interface {
+	Add(ctx context.Context, entity *domain.Record) (int64, error)
 
-	List(ctx context.Context, offset, limit int64) ([]domain.Auth, error)
-	ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.Auth, error)
+	Get(ctx context.Context, id int64) (*domain.Record, error)
+	GetBy(ctx context.Context, filterKey, filterValue string) (*domain.Record, error)
+	GetByInt(ctx context.Context, filterKey string, filterValue int64) (*domain.Record, error)
 
-	Update(ctx context.Context, id int64, entity *domain.Auth) error
-	UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.Auth) error
+	List(ctx context.Context, offset, limit int64) ([]domain.Record, error)
+	ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.Record, error)
+
+	Update(ctx context.Context, id int64, entity *domain.Record) error
+	UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.Record) error
 	UpdateColumn(ctx context.Context, id int64, key, value string) error
 
 	Delete(ctx context.Context, id int64, soft bool) error
 	DeleteBy(ctx context.Context, filterKey, filterValue string, soft bool) error
-}
-
-type IMapAuth interface {
-	Set(token string, userFull *domain.UserFull)
-	Get(token string) *domain.UserFull
-	Delete(token string)
 }

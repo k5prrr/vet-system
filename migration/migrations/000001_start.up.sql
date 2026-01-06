@@ -8,15 +8,18 @@ CREATE TABLE "public"."animal_tupes" (
     "id" integer DEFAULT nextval('animal_tupes_id_seq') NOT NULL,
     "name" character varying NOT NULL,
     "code" character varying NOT NULL,
+    "created_at" timestamptz NOT NULL,
+    "updated_at" timestamptz NOT NULL,
+    "deleted_at" timestamp,
     CONSTRAINT "animal_tupes_pkey" PRIMARY KEY ("id")
 )
 WITH (oids = false);
 
-INSERT INTO "animal_tupes" ("id", "name", "code") VALUES
-(1,	'кошка',	'cat'),
-(2,	'собака',	'dog'),
-(3,	'пернатые',	'bird'),
-(4,	'иные',	'other');
+INSERT INTO "animal_tupes" ("id", "name", "code", "created_at", "updated_at") VALUES
+(1,	'кошка',	'cat', NOW(), NOW()),
+(2,	'собака',	'dog', NOW(), NOW()),
+(3,	'пернатые',	'bird', NOW(), NOW()),
+(4,	'иные',	'other', NOW(), NOW());
 
 DROP TABLE IF EXISTS "animals";
 DROP SEQUENCE IF EXISTS animals_id_seq;
@@ -75,7 +78,7 @@ CREATE TABLE "public"."records" (
     "client_id" integer NOT NULL,
     "user_id" integer NOT NULL,
     "parent_id" integer NOT NULL,
-    "parent_tupe" integer NOT NULL,
+    "parent_role_id" integer NOT NULL,
     "status_id" integer NOT NULL,
     "animal_id" integer NOT NULL,
     "complaints" text,
@@ -83,6 +86,9 @@ CREATE TABLE "public"."records" (
     "ds" text,
     "recommendations" text NOT NULL,
     "description" text,
+    "created_at" timestamptz NOT NULL,
+    "updated_at" timestamptz NOT NULL,
+    "deleted_at" timestamp,
     CONSTRAINT "records_pkey" PRIMARY KEY ("id")
 )
 WITH (oids = false);
@@ -96,15 +102,18 @@ CREATE TABLE "public"."roles" (
     "id" integer DEFAULT nextval('roles_id_seq') NOT NULL,
     "name" character varying NOT NULL,
     "code" character varying NOT NULL,
+    "created_at" timestamptz NOT NULL,
+    "updated_at" timestamptz NOT NULL,
+    "deleted_at" timestamp,
     CONSTRAINT "roles_pkey" PRIMARY KEY ("id")
 )
 WITH (oids = false);
 
-INSERT INTO "roles" ("id", "name", "code") VALUES
-(1,	'без роли',	'non'),
-(2,	'Клиент',	'client'),
-(3,	'Доктор',	'doctor'),
-(4,	'Админ',	'admin');
+INSERT INTO "roles" ("id", "name", "code", "created_at", "updated_at") VALUES
+(1,	'без роли',	'non', NOW(), NOW()),
+(2,	'Клиент',	'client', NOW(), NOW()),
+(3,	'Доктор',	'doctor', NOW(), NOW()),
+(4,	'Админ',	'admin', NOW(), NOW());
 
 DROP TABLE IF EXISTS "status_id";
 DROP SEQUENCE IF EXISTS status_id_id_seq;
@@ -114,17 +123,20 @@ CREATE TABLE "public"."status_id" (
     "id" integer DEFAULT nextval('status_id_id_seq') NOT NULL,
     "name" character varying NOT NULL,
     "code" character varying NOT NULL,
+    "created_at" timestamptz NOT NULL,
+    "updated_at" timestamptz NOT NULL,
+    "deleted_at" timestamp,
     CONSTRAINT "status_id_pkey" PRIMARY KEY ("id")
 )
 WITH (oids = false);
 
-INSERT INTO "status_id" ("id", "name", "code") VALUES
-(1,	'новый',	'new'),
-(2,	'подтвержден',	'approve'),
-(3,	'ожидает приема',	'wait'),
-(4,	'завершен',	'complited'),
-(5,	'отменён',	'cancel'),
-(6,	'не явился',	'non');
+INSERT INTO "status_id" ("id", "name", "code", "created_at", "updated_at") VALUES
+(1,	'новый',	'new', NOW(), NOW()),
+(2,	'подтвержден',	'approve', NOW(), NOW()),
+(3,	'ожидает приема',	'wait', NOW(), NOW()),
+(4,	'завершен',	'complited', NOW(), NOW()),
+(5,	'отменён',	'cancel', NOW(), NOW()),
+(6,	'не явился',	'non', NOW(), NOW());
 
 DROP TABLE IF EXISTS "timesheet";
 DROP SEQUENCE IF EXISTS timesheet_id_seq;
@@ -136,6 +148,7 @@ CREATE TABLE "public"."timesheet" (
     "parent_id" integer NOT NULL,
     "date" date NOT NULL,
     "created_at" timestamptz NOT NULL,
+    "updated_at" timestamptz NOT NULL,
     "deleted_at" timestamptz,
     CONSTRAINT "timesheet_pkey" PRIMARY KEY ("id")
 )
@@ -153,8 +166,7 @@ CREATE TABLE "public"."users" (
     "phone" character varying NOT NULL,
     "parent_id" integer NOT NULL,
     "description" text,
-    "token" character(255) NOT NULL,
-    "password_hash" character(255) NOT NULL,
+    "auth_secret" character varying NOT NULL,
     "created_at" timestamptz NOT NULL,
     "updated_at" timestamptz NOT NULL,
     "deleted_at" timestamptz,

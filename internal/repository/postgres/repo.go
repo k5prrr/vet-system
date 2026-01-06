@@ -1,17 +1,8 @@
 package postgres
 
 import (
-	"app/pkg/database"
 	"errors"
 )
-
-type Repo struct {
-	db database.IDB
-}
-
-func New(db database.IDB) *Repo {
-	return &Repo{db: db}
-}
 
 var (
 	ErrNotFound     = errors.New("not found")
