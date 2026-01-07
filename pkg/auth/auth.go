@@ -15,7 +15,7 @@ import (
 )
 
 type IAuth interface {
-	Token(id int64, ip, secret string) string
+	Token(id int64, secret, ip string) string
 	UserID(token, secret string) (int64, error)
 	Secret(nBytes int) (string, error)
 	Code() (int64, error)
@@ -55,7 +55,7 @@ func (a *Auth) hash(secret, data []byte) []byte {
 }
 
 // Создание двойного токена
-func (a *Auth) Token(id int64, ip, secret string) string {
+func (a *Auth) Token(id int64, secret, ip string) string {
 	payload := fmt.Sprintf(
 		"%d|%d|%s",
 		id,

@@ -13,7 +13,7 @@ type User struct {
 	ParentID     int64   `json:"parentID" gorm:"column:parent_id;not null"`
 	Description  *string `json:"description,omitempty" gorm:"column:description;type:text"`
 	PasswordHash string  `json:"-" gorm:"column:password_hash;not null"`
-	AuthSecret   string  `json:"authSecret" gorm:"column:auth_secret;not null"`
+	AuthSecret   string  `json:"-" gorm:"column:auth_secret;not null"`
 
 	CreatedAt time.Time `json:"createdAt" gorm:"column:created_at;not null;autoCreateTime"`
 	UpdatedAt time.Time `json:"updatedAt" gorm:"column:updated_at;not null;autoUpdateTime"`

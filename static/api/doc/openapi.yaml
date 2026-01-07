@@ -1,20 +1,117 @@
 openapi: 3.1.0
 info:
   title: VET-system API
+  description: |
+    Ветеринарная система: запись на приём, управление клиентами, животными, врачами и расписанием.
+    
+    **Авторизация**: токен передаётся в HTTP-only cookie `auth_token` (`SameSite=Strict`).  
+    Роли:  
+    - `client` — клиент (запись только на себя)  
+    - `doctor` — врач (записи клиентов, редактирование приёмов)  
+    - `admin` — админ (полный доступ)
   version: 1.0.0
+  contact:
+    name: Evgenii Ivlev
+    email: k5pr@ya.ru
+
 servers:
-  - url: https://api.example.com
-    description: Production
   - url: http://localhost:8080
-    description: Local
+    description: Local development
+  - url: https://api.example.com
+    description: Production (TODO update)
 
 security:
-  - AuthHeader: []
+  - CookieAuth: []
 
 paths:
+  /api/login:
+    post:
+      summary: Вход в систему
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Успешный вход. Токен установлен в `Set-Cookie auth_token=...; HttpOnly`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Неверный логин или пароль
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/logout:
+    post:
+      summary: Выход из системы
+      operationId: logout
+      security:
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Cookie `auth_token` удалена (Max-Age = -1)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /api/current_user:
+    get:
+      summary: Получить данные текущего пользователя
+      operationId: currentUser
+      security:
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user:
+                    $ref: '#/components/schemas/UserPublic'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/create_admin:
+    post:
+      summary: Создать администратора (idempotent)
+      operationId: createAdmin
+      security: []  # Доступно без авторизации на этапе инициализации
+      responses:
+        '200':
+          description: Админ создан или уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '500':
+          description: Ошибка при создании админа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /api/record:
     post:
-      summary: Создать новую запись (доступно всем, включая неавторизованных)
+      summary: Создать новую запись на приём
+      description: |
+        Доступно **всем**, включая неавторизованных.  
+        Обязательно указать `fio` и `phone`.  
+        `userID` — ID врача (для роутинга расписания), должен быть валиден.
       operationId: createRecord
       requestBody:
         required: true
@@ -31,13 +128,19 @@ paths:
                 $ref: '#/components/schemas/RecordResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Врач (userID) не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/record/{id}:
     get:
       summary: Получить запись по ID
       operationId: getRecord
       security:
-        - AuthHeader: []
+        - CookieAuth: []
       parameters:
         - $ref: '#/components/parameters/RecordId'
       responses:
@@ -50,7 +153,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
-          description: Доступ запрещён
+          description: Доступ запрещён (не ваша запись)
           content:
             application/json:
               schema:
@@ -59,10 +162,13 @@ paths:
           $ref: '#/components/responses/NotFound'
 
     put:
-      summary: Полностью заменить запись (только врач/админ)
-      operationId: replaceRecord
+      summary: Обновить запись (полная замена)
+      description: >
+        Доступно только **врачу** (владельцу записи или самому клиенту — только ограниченные поля?)  
+        и **админу**. Обычный клиент не может редактировать — только создавать.
+      operationId: updateRecord
       security:
-        - AuthHeader: [ doctor, admin ]
+        - CookieAuth: []
       parameters:
         - $ref: '#/components/parameters/RecordId'
       requestBody:
@@ -70,7 +176,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RecordReplaceRequest'
+              $ref: '#/components/schemas/RecordUpdateRequest'
       responses:
         '200':
           description: Запись обновлена
@@ -78,55 +184,89 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RecordResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Forbidden'
+          description: Недостаточно прав (только клиент/врач/админ)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '404':
           $ref: '#/components/responses/NotFound'
 
     delete:
-      summary: Удалить запись (soft-delete), только врач/админ
+      summary: Мягкое удаление записи
+      description: Только для **врача** (владельца `record.userID`) или **админа**.
       operationId: deleteRecord
       security:
-        - AuthHeader: [ doctor, admin ]
+        - CookieAuth: []
       parameters:
         - $ref: '#/components/parameters/RecordId'
       responses:
         '204':
-          description: Удалено (soft)
+          description: Удалено (soft-delete `deleted_at = NOW()`)
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
-          $ref: '#/components/responses/Forbidden'
+          description: Недостаточно прав
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '404':
           $ref: '#/components/responses/NotFound'
 
   /api/records:
     get:
-      summary: Список записей (только свои — для обычного пользователя)
+      summary: Список записей текущего пользователя
+      description: |
+        Только свои записи (`client_id = current_user.id`), если роль — `client`.  
+        Врач видит записи **на себя** (`user_id = current_user.id`).  
+        Админ видит всё (пока не реализовано фильтрование — можно добавить позже).
       operationId: listRecords
       security:
-        - AuthHeader: []
+        - CookieAuth: []
+      parameters:
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
       responses:
         '200':
           description: Список записей
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/RecordResponse'
+                type: object
+                properties:
+                  records:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RecordResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
 
 components:
   securitySchemes:
-    AuthHeader:
+    CookieAuth:
       type: apiKey
-      in: header
-      name: X-Auth-ID
-      description: ID пользователя из auth-системы
+      in: cookie
+      name: auth_token
+      description: |
+        HTTP-only, Secure (в проде), SameSite=Strict cookie.  
+        Содержит base64-закодированный токен (`userID|exp|ip|sig_app|sig_secret`).
 
   parameters:
     RecordId:
@@ -135,59 +275,188 @@ components:
       required: true
       schema:
         type: integer
+        format: int64
         minimum: 1
-      description: ID записи
+      description: ID записи (`records.id`)
 
   schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          example: "invalid token"
+
+    LoginRequest:
+      type: object
+      required: [phone, password]
+      properties:
+        phone:
+          type: string
+          description: Номер телефона (может содержать символы, но валидируется как >=10 цифр)
+          example: "10001110011"
+        password:
+          type: string
+          example: "ps"
+
+    UserPublic:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        fio:
+          type: string
+          example: "Иванов Иван Иванович"
+        roleID:
+          type: integer
+          format: int64
+          enum: [2, 3, 4]
+          description: 2=client, 3=doctor, 4=admin
+          example: 4
+        phone:
+          type: string
+          example: "10001110011"
+        parentID:
+          type: integer
+          format: int64
+          example: 1
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-01-08T10:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-01-08T10:05:22Z"
+
     RecordCreateRequest:
       type: object
-      required: [fio, phone]
+      required: [fio, phone, userID]
       properties:
         fio:
           type: string
+          description: ФИО клиента, записывающегося
+          example: "Петров Пётр Петрович"
         phone:
           type: string
-
-    RecordReplaceRequest:
-      type: object
-      required: [fio, phone]
-      properties:
-        fio:
+          description: Телефон клиента
+          example: "+79001112233"
+        userID:
+          type: integer
+          format: int64
+          description: ID врача (обязательно — для привязки к расписанию)
+          example: 2
+        animalID:
+          type: integer
+          format: int64
+          nullable: true
+          description: ID животного клиента (опционально)
+        complaints:
           type: string
-        phone:
-          type: string
+          description: Жалобы (опционально)
         dateTime:
           type: string
           format: date-time
-        animalId:
+          description: Желаемое время приёма (админ/доктор могут позже уточнить)
+          example: "2026-01-15T14:30:00+03:00"
+
+    RecordUpdateRequest:
+      type: object
+      required: [dateTime, statusID, examination, recommendations]
+      properties:
+        dateTime:
+          type: string
+          format: date-time
+          example: "2026-01-15T14:30:00+03:00"
+        clientID:
           type: integer
-        statusId:
+          format: int64
+          readOnly: true  # устанавливается при создании
+        userID:
           type: integer
+          format: int64
+          readOnly: true  # врач не меняется
+        statusID:
+          type: integer
+          format: int64
+          enum: [1, 2, 3, 4, 5, 6]
+          description: 1=new, 2=approve, 3=wait, 4=complited, 5=cancel, 6=non
+          example: 2
+        animalID:
+          type: integer
+          format: int64
+          nullable: true
         complaints:
           type: string
+          nullable: true
         examination:
           type: string
+          example: "Животное активное, температура 38.5"
+        ds:
+          type: string
+          nullable: true
+          description: Диагноз
         recommendations:
           type: string
+          example: "Курс антибиотиков 7 дней"
 
     RecordResponse:
       type: object
       properties:
         id:
           type: integer
-        fio:
-          type: string
-        phone:
-          type: string
+          format: int64
+          example: 101
+        timesheetID:
+          type: integer
+          format: int64
+          example: 5
         dateTime:
           type: string
           format: date-time
-        statusId:
+          example: "2026-01-15T14:30:00+03:00"
+        clientID:
           type: integer
-        clientId:
+          format: int64
+        userID:
           type: integer
-        animalId:
+          format: int64
+        parentID:
           type: integer
+          format: int64
+          description: Кто создал запись
+        parentRoleID:
+          type: integer
+          format: int64
+        statusID:
+          type: integer
+          format: int64
+        animalID:
+          type: integer
+          format: int64
+          nullable: true
+        complaints:
+          type: string
+          nullable: true
+        examination:
+          type: string
+        ds:
+          type: string
+          nullable: true
+        recommendations:
+          type: string
+        description:
+          type: string
           nullable: true
         createdAt:
           type: string
@@ -196,36 +465,30 @@ components:
           type: string
           format: date-time
 
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-
   responses:
     BadRequest:
-      description: Неверный запрос
+      description: Неверный запрос (валидация, JSON parse и т.п.)
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
 
     Unauthorized:
-      description: Не авторизован
+      description: Не авторизован (`auth_token` отсутствует/недействителен)
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
 
     Forbidden:
-      description: Недостаточно прав
+      description: Действие запрещено текущей ролью
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
 
     NotFound:
-      description: Запись не найдена
+      description: Ресурс не найден (record, user, animal и т.д.)
       content:
         application/json:
           schema:

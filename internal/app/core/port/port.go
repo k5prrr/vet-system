@@ -7,13 +7,17 @@ import (
 
 // Так, давай на первых этапах IUseCase будет как общий, а потом разделим
 type IUseCase interface {
-	/*CreateUser(ctx context.Context, tgID int64, phone string) (int64, error)
-	SendAuthCode(ctx context.Context, phone string) error
-	CheckAuthCode(ctx context.Context, phone, code string) (string, error)
-
+	CreateAdmin(ctx context.Context) error
+	Login(ctx context.Context, phone, password, ip string) (string, error)
 	CurrentUser(ctx context.Context, token string) (*domain.User, error)
-	*/
-	Test1() (*domain.User, error)
+}
+type IAuth interface {
+	Token(id int64, secret, ip string) string
+	UserID(token, secret string) (int64, error)
+	Secret(nBytes int) (string, error)
+	Code() (int64, error)
+	PasswordHash(password string) (string, error)
+	PasswordVerify(password, encodedHash string) bool
 }
 
 type IRepoClient interface {

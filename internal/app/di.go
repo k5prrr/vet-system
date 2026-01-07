@@ -8,10 +8,12 @@ import (
 	"app/internal/app/core/usecase"
 	"app/internal/repository/postgres"
 	"app/migration"
+	"app/pkg/auth"
 	"app/pkg/database"
 	"app/pkg/env"
 	"app/pkg/server"
 	"fmt"
+	"time"
 )
 
 type dependencyInjection struct {
@@ -27,6 +29,8 @@ type dependencyInjection struct {
 	repoUserRole     port.IRepoUserRole
 	repoRecord       port.IRepoRecord
 	repoRecordStatus port.IRepoRecordStatus
+
+	auth port.IAuth
 
 	service *service.Service
 	useCase port.IUseCase
@@ -130,11 +134,21 @@ func (d *dependencyInjection) RepoRecordStatus() port.IRepoRecordStatus {
 	return d.repoRecordStatus
 }
 
+func (d *dependencyInjection) Auth() auth.IAuth {
+	if d.auth == nil {
+		conf := d.Conf()
+		ttl := time.Duration(conf.Int("APP_AUTH_TTL", 720))
+		d.auth = auth.NewAuth(
+			conf.Get("APP_SIGNING", "default_secret"),
+			ttl*time.Hour,
+		)
+	}
+	return d.auth
+}
 func (d *dependencyInjection) Services() *service.Service {
 	if d.service == nil {
-		conf := d.Conf()
 		d.service = service.New(
-			conf.Get("APP_SALT", ""),
+			d.Auth(),
 			d.RepoClient(),
 			d.RepoTimesheet(),
 			d.RepoAnimal(),
@@ -150,7 +164,11 @@ func (d *dependencyInjection) Services() *service.Service {
 }
 func (d *dependencyInjection) UseCase() port.IUseCase {
 	if d.useCase == nil {
-		d.useCase = usecase.New(d.Services())
+		conf := d.Conf()
+		d.useCase = usecase.New(
+			d.Services(),
+			conf.Get("APP_ADMIN", ""),
+		)
 	}
 
 	return d.useCase

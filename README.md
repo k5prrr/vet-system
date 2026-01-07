@@ -15,10 +15,15 @@ http://localhost:8081/api/doc/
 podman ps -a
 
 
-## INIT
+## START
 in ROOT
 chmod +x make.sh
-./make.sh init
+./make.sh start
+./make.sh help
+curl -X 'POST' 'http://localhost:8080/api/create_admin'
+
+
+
 
 
 

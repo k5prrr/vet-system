@@ -55,7 +55,7 @@ func NewRepoUser(db database.IDB) *RepoUser {
 		db:        db,
 		tableName: "users",
 		columns: []string{
-			"fio", "role_id", "phone", "parent_id", "description", "auth_secret",
+			"fio", "role_id", "phone", "parent_id", "description", "password_hash", "auth_secret",
 		},
 	}
 }
