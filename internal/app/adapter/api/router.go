@@ -21,6 +21,7 @@ func New(useCase port.IUseCase) *Router {
 }
 func (r *Router) init() {
 	r.HandleFunc("/api/test1", r.test1)
+	r.HandleFunc("/api/login", r.login)
 
 	r.mux.Handle("/",
 		http.StripPrefix("/",
@@ -30,6 +31,20 @@ func (r *Router) init() {
 }
 
 func (r *Router) test1(w http.ResponseWriter, req *http.Request) {
+	user, err := r.useCase.Test1()
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"err": err,
+		})
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"user": user,
+	})
+}
+
+func (r *Router) login(w http.ResponseWriter, req *http.Request) {
 	user, err := r.useCase.Test1()
 	if err != nil {
 		json.NewEncoder(w).Encode(map[string]interface{}{

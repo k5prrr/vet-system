@@ -5,7 +5,7 @@ CREATE SEQUENCE clients_id_seq INCREMENT 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 
 
 CREATE TABLE "public"."clients" (
     "id" bigint DEFAULT nextval('clients_id_seq') NOT NULL,
-    "fio" varchar varying NOT NULL,
+    "fio" varchar NOT NULL,
     "phone" varchar(255) NOT NULL,
     "birth_date" timestamptz,
     "parent_id" bigint NOT NULL,
@@ -41,9 +41,9 @@ DROP SEQUENCE IF EXISTS animals_id_seq;
 CREATE SEQUENCE animals_id_seq INCREMENT 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1;
 CREATE TABLE "public"."animals" (
     "id" bigint DEFAULT nextval('animals_id_seq') NOT NULL,
-    "name" varchar varying NOT NULL,
+    "name" varchar NOT NULL,
     "birth_date" date,
-    "chip" varchar varying,
+    "chip" varchar,
     "client_id" bigint,
     "animal_type_id" bigint NOT NULL,
     "description" text,
@@ -63,8 +63,8 @@ CREATE SEQUENCE animal_types_id_seq INCREMENT 1 MINVALUE 1 MAXVALUE 2147483647 C
 
 CREATE TABLE "public"."animal_types" (
     "id" bigint DEFAULT nextval('animal_types_id_seq') NOT NULL,
-    "name" varchar varying NOT NULL,
-    "code" varchar varying NOT NULL,
+    "name" varchar NOT NULL,
+    "code" varchar NOT NULL,
     "created_at" timestamptz NOT NULL,
     "updated_at" timestamptz NOT NULL,
     "deleted_at" timestamp,
@@ -115,8 +115,8 @@ CREATE SEQUENCE record_status_id_seq INCREMENT 1 MINVALUE 1 MAXVALUE 2147483647 
 
 CREATE TABLE "public"."record_status" (
     "id" bigint DEFAULT nextval('record_status_id_seq') NOT NULL,
-    "name" varchar varying NOT NULL,
-    "code" varchar varying NOT NULL,
+    "name" varchar NOT NULL,
+    "code" varchar NOT NULL,
     "created_at" timestamptz NOT NULL,
     "updated_at" timestamptz NOT NULL,
     "deleted_at" timestamp,
@@ -151,13 +151,13 @@ CREATE SEQUENCE users_id_seq INCREMENT 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1;
 
 CREATE TABLE "public"."users" (
     "id" bigint DEFAULT nextval('users_id_seq') NOT NULL,
-    "fio" varchar varying NOT NULL,
+    "fio" varchar NOT NULL,
     "role_id" bigint NOT NULL,
-    "phone" varchar varying NOT NULL,
+    "phone" varchar NOT NULL,
     "parent_id" bigint NOT NULL,
     "description" text,
-    "password_hash" varchar varying NOT NULL,
-    "auth_secret" varchar varying NOT NULL,
+    "password_hash" varchar NOT NULL,
+    "auth_secret" varchar NOT NULL,
     "created_at" timestamptz NOT NULL,
     "updated_at" timestamptz NOT NULL,
     "deleted_at" timestamptz,
@@ -170,8 +170,8 @@ CREATE SEQUENCE user_roles_id_seq INCREMENT 1 MINVALUE 1 MAXVALUE 2147483647 CAC
 
 CREATE TABLE "public"."user_roles" (
    "id" bigint DEFAULT nextval('user_roles_id_seq') NOT NULL,
-   "name" varchar varying NOT NULL,
-   "code" varchar varying NOT NULL,
+   "name" varchar NOT NULL,
+   "code" varchar NOT NULL,
    "created_at" timestamptz NOT NULL,
    "updated_at" timestamptz NOT NULL,
    "deleted_at" timestamp,
