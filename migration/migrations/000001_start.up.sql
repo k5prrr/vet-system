@@ -156,6 +156,7 @@ CREATE TABLE "public"."users" (
     "phone" varchar varying NOT NULL,
     "parent_id" bigint NOT NULL,
     "description" text,
+    "password_hash" varchar varying NOT NULL,
     "auth_secret" varchar varying NOT NULL,
     "created_at" timestamptz NOT NULL,
     "updated_at" timestamptz NOT NULL,

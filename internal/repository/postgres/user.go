@@ -70,6 +70,7 @@ func (r *RepoUser) scanEntityRow(row pgx.Row) (*domain.User, error) {
 		&entity.Phone,
 		&entity.ParentID,
 		&entity.Description,
+		&entity.PasswordHash,
 		&entity.AuthSecret,
 
 		&entity.CreatedAt,
@@ -108,6 +109,7 @@ func (r *RepoUser) Add(ctx context.Context, entity *domain.User) (int64, error) 
 		entity.Phone,
 		entity.ParentID,
 		entity.Description,
+		entity.PasswordHash,
 		entity.AuthSecret,
 
 		entity.CreatedAt,
@@ -144,6 +146,7 @@ func (r *RepoUser) Update(ctx context.Context, id int64, entity *domain.User) er
 		entity.Phone,
 		entity.ParentID,
 		entity.Description,
+		entity.PasswordHash,
 		entity.AuthSecret,
 
 		entity.UpdatedAt,
@@ -178,6 +181,7 @@ func (r *RepoUser) UpdateBy(ctx context.Context, filterKey, filterValue string, 
 		entity.Phone,
 		entity.ParentID,
 		entity.Description,
+		entity.PasswordHash,
 		entity.AuthSecret,
 
 		entity.UpdatedAt,
