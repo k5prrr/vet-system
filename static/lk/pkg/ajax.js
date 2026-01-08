@@ -1,5 +1,5 @@
 const ajax = {
-    versionDate: '2025-07-03',
+    versionDate: '2026-01-08',
     handleResponse: (callback = console.log, data, arg) => {
         if (data === undefined) 
             callback()
@@ -11,9 +11,14 @@ const ajax = {
     json: (url, data = {}, callback = console.log, arg) => {
         if (!url) 
             throw new Error('URL are required.')
-    
+
+        let method = 'POST'
+        if (data.ajaxMethod) {
+            method = data.ajaxMethod
+            delete data.ajaxMethod
+        }
         fetch(url, {
-            method: 'POST',
+            method: method,
             headers: {
                 'Content-Type': 'application/json'
             },

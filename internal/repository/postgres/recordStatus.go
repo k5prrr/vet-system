@@ -30,6 +30,7 @@ type IRepoRecordStatus interface {
 
 	List(ctx context.Context, offset, limit int64) ([]domain.RecordStatus, error)
 	ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.RecordStatus, error)
+	Map(ctx context.Context) (map[int64]domain.RecordStatus, error)
 
 	Update(ctx context.Context, id int64, entity *domain.RecordStatus) error
 	UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.RecordStatus) error
@@ -266,6 +267,19 @@ func (r *RepoRecordStatus) ListBy(ctx context.Context, filterKey, filterValue st
 	}
 
 	return r.scanEntityRows(rows)
+}
+func (r *RepoRecordStatus) Map(ctx context.Context) (map[int64]domain.RecordStatus, error) {
+	entities, err := r.List(ctx, 0, 0)
+	if err != nil {
+		return nil, fmt.Errorf("load all entities via List: %w", err)
+	}
+
+	result := make(map[int64]domain.RecordStatus, len(entities))
+	for _, entity := range entities {
+		result[entity.ID] = entity
+	}
+
+	return result, nil
 }
 func (r *RepoRecordStatus) UpdateColumn(ctx context.Context, id int64, key, value string) error {
 	var err error

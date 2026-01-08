@@ -10,6 +10,12 @@ type IUseCase interface {
 	CreateAdmin(ctx context.Context) error
 	Login(ctx context.Context, phone, password, ip string) (string, error)
 	CurrentUser(ctx context.Context, token string) (*domain.User, error)
+	InitData(ctx context.Context, token string) (*domain.InitData, error)
+
+	Users(ctx context.Context, token string) ([]domain.User, error)
+	CreateUser(ctx context.Context, token string, input *domain.User) (int64, error)
+	UpdateUser(ctx context.Context, token string, id int64, input *domain.User) error
+	DeleteUser(ctx context.Context, token string, id int64) error
 }
 type IAuth interface {
 	Token(id int64, secret, ip string) string
@@ -29,6 +35,7 @@ type IRepoClient interface {
 
 	List(ctx context.Context, offset, limit int64) ([]domain.Client, error)
 	ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.Client, error)
+	Map(ctx context.Context) (map[int64]domain.Client, error)
 
 	Update(ctx context.Context, id int64, entity *domain.Client) error
 	UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.Client) error
@@ -46,6 +53,7 @@ type IRepoTimesheet interface {
 
 	List(ctx context.Context, offset, limit int64) ([]domain.Timesheet, error)
 	ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.Timesheet, error)
+	Map(ctx context.Context) (map[int64]domain.Timesheet, error)
 
 	Update(ctx context.Context, id int64, entity *domain.Timesheet) error
 	UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.Timesheet) error
@@ -64,6 +72,7 @@ type IRepoAnimal interface {
 
 	List(ctx context.Context, offset, limit int64) ([]domain.Animal, error)
 	ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.Animal, error)
+	Map(ctx context.Context) (map[int64]domain.Animal, error)
 
 	Update(ctx context.Context, id int64, entity *domain.Animal) error
 	UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.Animal) error
@@ -81,6 +90,7 @@ type IRepoAnimalType interface {
 
 	List(ctx context.Context, offset, limit int64) ([]domain.AnimalType, error)
 	ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.AnimalType, error)
+	Map(ctx context.Context) (map[int64]domain.AnimalType, error)
 
 	Update(ctx context.Context, id int64, entity *domain.AnimalType) error
 	UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.AnimalType) error
@@ -99,6 +109,7 @@ type IRepoUser interface {
 
 	List(ctx context.Context, offset, limit int64) ([]domain.User, error)
 	ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.User, error)
+	Map(ctx context.Context) (map[int64]domain.User, error)
 
 	Update(ctx context.Context, id int64, entity *domain.User) error
 	UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.User) error
@@ -116,6 +127,7 @@ type IRepoUserRole interface {
 
 	List(ctx context.Context, offset, limit int64) ([]domain.UserRole, error)
 	ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.UserRole, error)
+	Map(ctx context.Context) (map[int64]domain.UserRole, error)
 
 	Update(ctx context.Context, id int64, entity *domain.UserRole) error
 	UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.UserRole) error
@@ -134,6 +146,7 @@ type IRepoRecord interface {
 
 	List(ctx context.Context, offset, limit int64) ([]domain.Record, error)
 	ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.Record, error)
+	Map(ctx context.Context) (map[int64]domain.Record, error)
 
 	Update(ctx context.Context, id int64, entity *domain.Record) error
 	UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.Record) error
@@ -151,6 +164,7 @@ type IRepoRecordStatus interface {
 
 	List(ctx context.Context, offset, limit int64) ([]domain.RecordStatus, error)
 	ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.RecordStatus, error)
+	Map(ctx context.Context) (map[int64]domain.RecordStatus, error)
 
 	Update(ctx context.Context, id int64, entity *domain.RecordStatus) error
 	UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.RecordStatus) error

@@ -78,3 +78,40 @@ func (u *UseCase) CurrentUser(ctx context.Context, token string) (*domain.User, 
 
 	return user, nil
 }
+func (u *UseCase) InitData(ctx context.Context, token string) (*domain.InitData, error) {
+	if token == "" {
+		return nil, fmt.Errorf("token is required")
+	}
+
+	userID, err := u.service.Auth.UserID(token, "")
+	if err != nil {
+		return nil, fmt.Errorf("invalid token: %w", err)
+	}
+
+	user, err := u.service.RepoUser.Get(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("user not found: %w", err)
+	}
+	user.PasswordHash = ""
+	user.AuthSecret = ""
+
+	userRoles, err := u.service.RepoUserRole.Map(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load user roles: %w", err)
+	}
+	animalTypes, err := u.service.RepoAnimalType.Map(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load animal types: %w", err)
+	}
+	recordStatuses, err := u.service.RepoRecordStatus.Map(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load record statuses: %w", err)
+	}
+
+	return &domain.InitData{
+		User:           user,
+		UserRoles:      userRoles,
+		AnimalTypes:    animalTypes,
+		RecordStatuses: recordStatuses,
+	}, nil
+}

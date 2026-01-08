@@ -30,6 +30,7 @@ type IRepoTimesheet interface {
 
 	List(ctx context.Context, offset, limit int64) ([]domain.Timesheet, error)
 	ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.Timesheet, error)
+	Map(ctx context.Context) (map[int64]domain.Timesheet, error)
 
 	Update(ctx context.Context, id int64, entity *domain.Timesheet) error
 	UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.Timesheet) error
@@ -270,6 +271,19 @@ func (r *RepoTimesheet) ListBy(ctx context.Context, filterKey, filterValue strin
 	}
 
 	return r.scanEntityRows(rows)
+}
+func (r *RepoTimesheet) Map(ctx context.Context) (map[int64]domain.Timesheet, error) {
+	entities, err := r.List(ctx, 0, 0)
+	if err != nil {
+		return nil, fmt.Errorf("load all entities via List: %w", err)
+	}
+
+	result := make(map[int64]domain.Timesheet, len(entities))
+	for _, entity := range entities {
+		result[entity.ID] = entity
+	}
+
+	return result, nil
 }
 func (r *RepoTimesheet) UpdateColumn(ctx context.Context, id int64, key, value string) error {
 	var err error

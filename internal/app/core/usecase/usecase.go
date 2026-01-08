@@ -3,6 +3,7 @@ package usecase
 import (
 	"app/internal/app/core/port"
 	"app/internal/app/core/service"
+	"errors"
 )
 
 // Тут он как основной, тут только создания
@@ -17,3 +18,8 @@ func New(service *service.Service, admin string) port.IUseCase {
 		admin:   admin,
 	}
 }
+
+var (
+	ErrUnauthorized = errors.New("unauthorized")
+	ErrForbidden    = errors.New("forbidden: only admins can access this resource")
+)

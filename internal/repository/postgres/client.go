@@ -30,6 +30,7 @@ type IRepoClient interface {
 
 	List(ctx context.Context, offset, limit int64) ([]domain.Client, error)
 	ListBy(ctx context.Context, filterKey, filterValue string, offset, limit int64) ([]domain.Client, error)
+	Map(ctx context.Context) (map[int64]domain.Client, error)
 
 	Update(ctx context.Context, id int64, entity *domain.Client) error
 	UpdateBy(ctx context.Context, filterKey, filterValue string, entity *domain.Client) error
@@ -279,6 +280,19 @@ func (r *RepoClient) ListBy(ctx context.Context, filterKey, filterValue string, 
 	}
 
 	return r.scanEntityRows(rows)
+}
+func (r *RepoClient) Map(ctx context.Context) (map[int64]domain.Client, error) {
+	entities, err := r.List(ctx, 0, 0)
+	if err != nil {
+		return nil, fmt.Errorf("load all entities via List: %w", err)
+	}
+
+	result := make(map[int64]domain.Client, len(entities))
+	for _, entity := range entities {
+		result[entity.ID] = entity
+	}
+
+	return result, nil
 }
 func (r *RepoClient) UpdateColumn(ctx context.Context, id int64, key, value string) error {
 	var err error

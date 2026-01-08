@@ -2783,4 +2783,23 @@ window.addEventListener('error', function(event) {
 })
 }
 
+
+const tests = {
+    all: () => {
+        ajax.json('/api/login', {phone:'10001110011', password:'ps'})
+        ajax.json('/api/current_user', {})
+        ajax.getJson('/api/init')
+
+
+        ajax.getJson('/api/users')
+
+        /*
+animals
+clients
+records
+timesheet
+users
+         */
+    },
+}
 app.main()
