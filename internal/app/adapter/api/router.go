@@ -33,6 +33,8 @@ func (r *Router) init() {
 	r.HandleFunc("/api/records", r.records)
 	r.HandleFunc("/api/timesheets", r.timesheets)
 
+	// report
+
 	r.mux.Handle("/",
 		http.StripPrefix("/",
 			http.FileServer(http.Dir("./static/")),

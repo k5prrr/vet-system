@@ -2,7 +2,7 @@
 # bash scripts/createFileForGPT.sh
 
 OUTPUT_FILE=projectForGPT.txt
-EXCLUDE_DIRS=(".git" "pg_data" "config" "bin" ".idea" "static" "docs/static/swagger")
+EXCLUDE_DIRS=(".git" "pg_data" "config" "bin" ".idea" "static/assets" "static/doc" "static/api" "static/lk/font" "static/lk/img")
 EXCLUDE_FILES=(OUTPUT_FILE "go.sum" "go.mod" "*.log" "*.tmp" ".env")
 
 # Очистка/создание файла вывода

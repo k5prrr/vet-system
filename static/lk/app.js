@@ -13,7 +13,7 @@ const options = {
     }
 }
 var storage = {
-    idb: null
+
 }
 
 const views = {
@@ -27,14 +27,14 @@ const views = {
 
 ${currentUser.role == 'admin' ? `
     <h4></h4>
-    <button onmousedown="pages.users()"><img src="./img/ico/people.svg" alt="ico">Пользователи</button>
-    <button onmousedown="pages.report()"><img src="./img/ico/file-earmark-bar-graph-fill.svg" alt="ico">Отчёт</button>
+    <button onmousedown="pages.users({update:true})"><img src="./img/ico/people.svg" alt="ico">Пользователи</button>
+    <button onmousedown="pages.report({update:true})"><img src="./img/ico/file-earmark-bar-graph-fill.svg" alt="ico">Отчёт</button>
     
     <h4></h4>
-    <button onmousedown="pages.timesheet()"><img src="./img/ico/calendar2-week-fill.svg" alt="ico">Расписание</button>
-    <button onmousedown="pages.record()"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
-    <button onmousedown="pages.clients()"><img src="./img/ico/person-vcard.svg" alt="ico">Клиенты</button>
-    <button onmousedown="pages.animals()"><img src="./img/ico/bandaid-fill.svg" alt="ico">Животные</button>
+    <button onmousedown="pages.timesheet({update:true})"><img src="./img/ico/calendar2-week-fill.svg" alt="ico">Расписание</button>
+    <button onmousedown="pages.records({update:true})"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
+    <button onmousedown="pages.clients({update:true})"><img src="./img/ico/person-vcard.svg" alt="ico">Клиенты</button>
+    <button onmousedown="pages.animals({update:true})"><img src="./img/ico/bandaid-fill.svg" alt="ico">Животные</button>
     
     <h4></h4>
     <button onmousedown="pages.profile()"><img src="./img/ico/person.svg" alt="ico">Профиль</button>
@@ -44,10 +44,10 @@ ${currentUser.role == 'admin' ? `
 `:''}
 ${currentUser.role == 'doctor' ? `
     <h4></h4>
-    <button onmousedown="pages.timesheet()"><img src="./img/ico/calendar2-week-fill.svg" alt="ico">Расписание</button>
-    <button onmousedown="pages.record()"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
-    <button onmousedown="pages.clients()"><img src="./img/ico/person-vcard.svg" alt="ico">Клиенты</button>
-    <button onmousedown="pages.animals()"><img src="./img/ico/bandaid-fill.svg" alt="ico">Животные</button>
+    <button onmousedown="pages.timesheet({update:true})"><img src="./img/ico/calendar2-week-fill.svg" alt="ico">Расписание</button>
+    <button onmousedown="pages.records({update:true})"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
+    <button onmousedown="pages.clients({update:true})"><img src="./img/ico/person-vcard.svg" alt="ico">Клиенты</button>
+    <button onmousedown="pages.animals({update:true})"><img src="./img/ico/bandaid-fill.svg" alt="ico">Животные</button>
     <h4></h4>
     <button onmousedown="pages.profile()"><img src="./img/ico/person.svg" alt="ico">Профиль</button>
     <button onmousedown="pages.help()"><img src="./img/ico/question-octagon.svg" alt="ico">Помощь</button>
@@ -55,7 +55,7 @@ ${currentUser.role == 'doctor' ? `
 ${currentUser.role == 'client' ? `
     <h4></h4>
     <button onmousedown="location.href='tel:+79675552322'"><img src="./img/ico/telephone-fill.svg" alt="ico">Позвонить</button>
-    <button onmousedown="pages.record()"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
+    <button onmousedown="pages.records({update:true})"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
     <!--button onmousedown="pages.animals()"><img src="./img/ico/bandaid-fill.svg" alt="ico">Животные</button-->
     <h4></h4>
     <button onmousedown="pages.profile()"><img src="./img/ico/person.svg" alt="ico">Профиль</button>
@@ -165,8 +165,13 @@ let pages = {
 <div class="loginBox">
     <h1 class="logo_text">OpenVET</h1>
     <form class="form1 block" id="formLogin" onsubmit="app.login(this);return false">
-        <label class="name required">E-mail</label>
-        <div class="value"><input name="login" type="text" value="" maxlength="64"></div>
+        <label class="name required">Номер телефона</label>
+        <div class="value"><input 
+        type="tel"
+        required
+        placeholder="+7 (___) ___-__-__"
+        oninput="app.inputPhone(this)"
+        name="phone" value="" maxlength="64"></div>
         <br>
         <label class="name required">Пароль</label>
         <div class="value"><input name="password" type="password" value="" maxlength="64"></div>
@@ -221,7 +226,10 @@ let pages = {
         </div>
         `)
     },
+
     users: data => {
+        app.updateEntity(data, 'users')
+        let items = storage.users || []
         utils.setText(` 
 ${views.header(data)}
 <div class="content" id="content">
@@ -247,7 +255,15 @@ ${views.header(data)}
             <div class="grid-item grid-header">Роль</div>
             <div class="grid-item grid-header">Действия</div>
         </div>
-    
+        ${items.map(item => (`
+        <div class="line">
+            <div class="grid-item">${item.id}</div>
+            <div class="grid-item">${item.fio}</div>
+            <div class="grid-item">${item.phone}</div>
+            <div class="grid-item">${storage.userRoles[item.roleID].name}</div>
+            <div class="grid-item"><button class="btn" onmousedown="pages.user({id:${item.id}})">Править</button></div>
+        </div>
+        `)).join('')}
         
     </div>
 </div>
@@ -257,6 +273,7 @@ ${views.header(data)}
     user:data => {},
 
     report: data => {
+        app.updateEntity(data, 'report')
         utils.setText(` 
         ${views.header(data)}
         <div class="content" id="content">
@@ -278,6 +295,7 @@ ${views.header(data)}
     },
 
     timesheet: data => {
+        app.updateEntity(data, 'timesheets')
         utils.setText(` 
         ${views.header(data)}
         <div class="content" id="content">
@@ -307,7 +325,8 @@ ${views.header(data)}
         `)
     },
 
-    record: data => {
+    records: data => {
+        app.updateEntity(data, 'records')
         utils.setText(` 
 ${views.header(data)}
 <div class="content" id="content">
@@ -357,6 +376,7 @@ ${views.header(data)}
 
     
     clients: data => {
+        app.updateEntity(data, 'clients')
         utils.setText(` 
 ${views.header(data)}
 <div class="content" id="content">
@@ -604,6 +624,7 @@ ${views.header(data)}
 
 
     animals: data => {
+        app.updateEntity(data, 'animals')
         utils.setText(` 
 ${views.header(data)}
 <div class="content" id="content">
@@ -1186,7 +1207,7 @@ ${views.header(data)}
                     <h1>Профиль</h1>
                     <div class="text">
                         <p>
-                        <b>ФИО:</b> ${currentUser.name}<br>
+                        <b>ФИО:</b> ${currentUser.fio}<br>
                     <b>Роль:</b> ${options.roleMap[currentUser.role] ? options.roleMap[currentUser.role] : 'нет'}
                         
                         
@@ -1194,7 +1215,7 @@ ${views.header(data)}
                         <p>Менять только через админа.<br> Контакты в помощи</p>
                     </div>
                     <div class="buttons">
-                        <button class="btn" onmousedown="pages.client()">Выйти</button>
+                        <button class="btn" onmousedown="app.logout()">Выйти</button>
                     </div>
                 </div>
             </div>
@@ -1924,37 +1945,88 @@ const app = {
       apiUrl: "/api/v1.php",
     },
     main: () => {
-        
-        pages.login()
         notify.start()
-/*      let hashArray = location.hash.split('/')
-      if (hashArray[0] == '#createNewPassword') {
-        const urlWithoutHash = window.location.href.split('#')[0]
-        window.history.replaceState({}, document.title, urlWithoutHash)
-        
-        myCookie.set("userID", Number(hashArray[1]))
-        myCookie.set("userKEY", hashArray[2])
-        
-        app.ajax('createNewPassword') 
-        pages.recoverPassword()
-        return;
-      }
-      
-      app.checkAuth(() => {
-        pages.main();
-      })
-      app.updateCities()
-      app.updateProducts()*/
+        app.initData()
     },
+    initData: () => {
+        ajax.getJson('/api/init', answer => {
+            app.inputInnitData(answer)
+            if (!storage.user)
+                pages.login()
+        })
+    },
+    inputInnitData: (answer) => {
+        console.log(['init', answer])
+        if (!answer || !answer.data || !answer.data.user) return;
 
+        Object.assign(storage, answer.data)
+
+        let user = answer.data.user
+        currentUser.id = user.id
+        currentUser.fio = user.fio
+        currentUser.role = answer.data.userRoles && answer.data.userRoles[user.roleID] ? answer.data.userRoles[user.roleID].code : ''
+        pages.help()
+
+    },
     login: (form) => {
         const data = utils.formData(form)
-        if (data.login == 'test' || data.login == '1') {
-            app.loginTest()
-            return;
-        }
-        notify.err('Неверный логин или пароль')
+        ajax.json('/api/login', data, answer => {
+            app.inputInnitData(answer)
+
+            if (!answer || !answer.ok)
+                notify.err('Неверный логин или пароль')
+        })
     },
+    logout: () => {
+        storage = {}
+        ajax.getJson('/api/logout', answer => {
+            pages.login()
+        })
+    },
+    inputPhone: input => {
+        input.value = utils.formatPhone(input.value)
+    },
+    // Обновляет ссписок перед загрузкой их на страницу
+    updateEntity: (data, name='users') => {
+        if (!data || !data.update) return;
+
+        ajax.getJson(`/api/${name}`, answer => {
+            if (!answer) return;
+            if (answer.error) {
+                notify.err(answer.error)
+                return;
+            }
+            storage[name] = answer[name] ? answer[name] : []
+            pages[name]()
+        })
+    },
+
+    createUser: () => {
+        let data = {
+            fio: "Иванов Иван Иванович",
+            roleID: 3,  // 2 — client, 3 — doctor, 4 — admin
+            phone: "+79675552322",
+            password: "ps",
+            description: "Новый врач"
+        }
+        ajax.json('/api/users', data, answer => {
+           if (!answer) {
+               notify.err("Ех, попробуйте позднее")
+               return;
+           }
+           if (answer.error) {
+               notify.err(answer.error)
+               return;
+           }
+            if (answer.id) {
+                notify.message(`Успешно создан id:${answer.id}`)
+                return;
+            }
+        })
+    },
+
+
+
     loginTest: () => {
         pages.help()
         notify.message('Тестовый режим')
@@ -1979,14 +2051,6 @@ const app = {
           storage.user = answer;
         }
         callback();
-      });
-    },
-    logout: () => {
-      app.ajax("logout", null, () => {
-        myCookie.remove("userID");
-        myCookie.remove("userKEY");
-        storage.user = null;
-        pages.main();
       });
     },
     forgotPassword: () => {
@@ -2515,26 +2579,26 @@ const app = {
     },
   
     fetchSuggestions: async () => {
-      const apiKey = "9564001e-c30e-41f6-99cc-7f934923a3b6";
+      const apiKey = "";
       if (state.address_shop.length < 3) {
         state.suggestions = [];
         app.renderSuggestions();
         return;
       }
-  
+
       if (app.cache.has(state.address_shop)) {
         state.suggestions = app.cache.get(state.address_shop);
         app.renderSuggestions();
         return;
       }
-  
+
       if (app.abortController) {
         app.abortController.abort();
       }
       app.abortController = new AbortController();
-  
+
       state.suggestionLoading = true;
-  
+
       try {
         const response = await fetch(
           `https://suggest-maps.yandex.ru/v1/suggest?apikey=${apiKey}&print_address=1&text=${encodeURIComponent(
@@ -2542,11 +2606,11 @@ const app = {
           )}&lang=ru_RU`,
           { signal: app.abortController.signal }
         );
-  
+
         if (!response.ok) {
           throw new Error("Ошибка сети: " + response.statusText);
         }
-  
+
         const data = await response.json();
         state.suggestions = data.results || [];
         app.cache.set(state.address_shop, state.suggestions);
@@ -2562,7 +2626,7 @@ const app = {
         app.renderSuggestions();
       }
     },
-  
+
     renderSuggestions: () => {
       const suggestionsList = document.getElementById("suggestions");
       suggestionsList.innerHTML = "";
@@ -2757,7 +2821,7 @@ const app = {
 
 const currentUser = {
     id: 0,
-    name: 'Test',
+    fio: 'Test',
     role: '', // client || doctor || admin
 }
 

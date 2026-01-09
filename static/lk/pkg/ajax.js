@@ -34,7 +34,8 @@ const ajax = {
             ajax.handleResponse(callback, responseJson, arg)
         })
         .catch(error => {
-            console.error(error)
+            ajax.handleResponse(callback, { error: error.message }, arg);
+            //console.error(error)
         })
     },
     jsonTest: (url, data = {}, callback = console.log, arg) => {
@@ -88,7 +89,8 @@ const ajax = {
             ajax.handleResponse(callback, responseJson, arg)
         })
         .catch(error => {
-            console.error(error)
+            ajax.handleResponse(callback, { error: error.message }, arg);
+            //console.error(error)
         });
     },
     text: (url, callback = console.log, arg) => {

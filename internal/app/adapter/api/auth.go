@@ -81,7 +81,7 @@ func (r *Router) login(w http.ResponseWriter, req *http.Request) {
 func (r *Router) logout(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	if req.Method != http.MethodPost {
+	if req.Method != http.MethodGet {
 		r.err(w, http.StatusMethodNotAllowed, errors.New("method not allowed"))
 		return
 	}
