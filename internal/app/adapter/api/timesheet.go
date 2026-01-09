@@ -11,9 +11,9 @@ import (
 	"strings"
 )
 
-func (r *Router) animals(w http.ResponseWriter, req *http.Request) {
+func (r *Router) timesheets(w http.ResponseWriter, req *http.Request) {
 	// Change
-	nameEntity, nameEntities := "animal", "animals"
+	nameEntity, nameEntities := "timesheet", "timesheets"
 	w.Header().Set("Content-Type", "application/json")
 
 	cookie, err := req.Cookie("auth_token")
@@ -42,7 +42,7 @@ func (r *Router) animals(w http.ResponseWriter, req *http.Request) {
 	case http.MethodGet:
 		if id == 0 {
 			// Change
-			entities, err := r.useCase.Animals(req.Context(), token)
+			entities, err := r.useCase.Timesheets(req.Context(), token)
 			if err != nil {
 				status := http.StatusInternalServerError
 				if errors.Is(err, usecase.ErrUnauthorized) {
@@ -57,7 +57,7 @@ func (r *Router) animals(w http.ResponseWriter, req *http.Request) {
 			json.NewEncoder(w).Encode(map[string]interface{}{"ok": true, nameEntities: entities})
 		} else {
 			// Change
-			entity, err := r.useCase.Animal(req.Context(), token, id)
+			entity, err := r.useCase.Timesheet(req.Context(), token, id)
 			if err != nil {
 				status := http.StatusInternalServerError
 				if errors.Is(err, usecase.ErrUnauthorized) || errors.Is(err, usecase.ErrForbidden) {
@@ -72,13 +72,13 @@ func (r *Router) animals(w http.ResponseWriter, req *http.Request) {
 
 	case http.MethodPost:
 		// Change
-		var input domain.Animal
+		var input domain.Timesheet
 		if err := json.NewDecoder(req.Body).Decode(&input); err != nil {
 			r.err(w, http.StatusBadRequest, errors.New("invalid JSON"))
 			return
 		}
 		// Change
-		id, err := r.useCase.CreateAnimal(req.Context(), token, &input)
+		id, err := r.useCase.CreateTimesheet(req.Context(), token, &input)
 		if err != nil {
 			status := http.StatusInternalServerError
 			if errors.Is(err, usecase.ErrUnauthorized) {
@@ -98,13 +98,13 @@ func (r *Router) animals(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 		// Change
-		var input domain.Animal
+		var input domain.Timesheet
 		if err := json.NewDecoder(req.Body).Decode(&input); err != nil {
 			r.err(w, http.StatusBadRequest, errors.New("invalid JSON"))
 			return
 		}
 		// Change
-		err := r.useCase.UpdateAnimal(req.Context(), token, id, &input)
+		err := r.useCase.UpdateTimesheet(req.Context(), token, id, &input)
 		if err != nil {
 			status := http.StatusInternalServerError
 			if errors.Is(err, usecase.ErrUnauthorized) {
@@ -124,7 +124,7 @@ func (r *Router) animals(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 		// Change
-		err := r.useCase.DeleteAnimal(req.Context(), token, id)
+		err := r.useCase.DeleteTimesheet(req.Context(), token, id)
 		if err != nil {
 			status := http.StatusInternalServerError
 			if errors.Is(err, usecase.ErrUnauthorized) {

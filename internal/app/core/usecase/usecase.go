@@ -52,6 +52,17 @@ func (u *UseCase) authorize(ctx context.Context, token string) (*domain.User, er
 	return user, nil
 }
 
+func (u *UseCase) authorizeClientOrDoctorOrAdmin(ctx context.Context, token string) (*domain.User, error) {
+	user, err := u.authorize(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+	if user.RoleID != RoleClient && user.RoleID != RoleDoctor && user.RoleID != RoleAdmin {
+		return nil, ErrForbidden
+	}
+
+	return user, nil
+}
 func (u *UseCase) authorizeDoctorOrAdmin(ctx context.Context, token string) (*domain.User, error) {
 	user, err := u.authorize(ctx, token)
 	if err != nil {

@@ -24,6 +24,12 @@ type IUseCase interface {
 	UpdateAnimal(ctx context.Context, token string, id int64, input *domain.Animal) error
 	DeleteAnimal(ctx context.Context, token string, id int64) error
 
+	CreateClient(ctx context.Context, token string, input *domain.Client) (int64, error)
+	Client(ctx context.Context, token string, id int64) (*domain.Client, error)
+	Clients(ctx context.Context, token string) ([]domain.Client, error)
+	UpdateClient(ctx context.Context, token string, id int64, input *domain.Client) error
+	DeleteClient(ctx context.Context, token string, id int64) error
+
 	CreateRecord(ctx context.Context, token string, input *domain.Record) (int64, error)
 	Record(ctx context.Context, token string, id int64) (*domain.Record, error)
 	Records(ctx context.Context, token string) ([]domain.Record, error)

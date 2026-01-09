@@ -12,6 +12,8 @@ import (
 )
 
 func (r *Router) users(w http.ResponseWriter, req *http.Request) {
+	// Change
+	nameEntity, nameEntities := "user", "users"
 	w.Header().Set("Content-Type", "application/json")
 
 	cookie, err := req.Cookie("auth_token")
@@ -21,14 +23,14 @@ func (r *Router) users(w http.ResponseWriter, req *http.Request) {
 	}
 	token := cookie.Value
 
-	// Извлекаем ID, если есть
-	path := strings.TrimPrefix(req.URL.Path, "/api/users")
+	path := strings.TrimPrefix(req.URL.Path, fmt.Sprintf("/api/%s", nameEntities))
 	parts := strings.Split(strings.Trim(path, "/"), "/")
+
 	var id int64
 	if len(parts) == 1 && parts[0] != "" {
 		id, err = strconv.ParseInt(parts[0], 10, 64)
 		if err != nil {
-			r.err(w, http.StatusBadRequest, errors.New("invalid user ID"))
+			r.err(w, http.StatusBadRequest, errors.New("invalid ID"))
 			return
 		}
 	} else if len(parts) > 1 {
@@ -39,44 +41,44 @@ func (r *Router) users(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet:
 		if id == 0 {
-			// GET /api/users — список
-			users, err := r.useCase.Users(req.Context(), token)
+			// Change
+			entities, err := r.useCase.Users(req.Context(), token)
 			if err != nil {
 				status := http.StatusInternalServerError
-				if errors.Is(err, usecase.ErrUnauthorized) || errors.Is(err, usecase.ErrForbidden) {
+				if errors.Is(err, usecase.ErrUnauthorized) {
+					status = http.StatusUnauthorized
+				} else if errors.Is(err, usecase.ErrForbidden) {
 					status = http.StatusForbidden
 				}
-				r.err(w, status, fmt.Errorf("list users: %w", err))
+				r.err(w, status, fmt.Errorf("get: %w", err))
 				return
 			}
 			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(map[string]interface{}{"ok": true, "users": users})
+			json.NewEncoder(w).Encode(map[string]interface{}{"ok": true, nameEntities: entities})
 		} else {
-			// GET /api/users/123 — один пользователь
-			user, err := r.useCase.User(req.Context(), token, id)
+			// Change
+			entity, err := r.useCase.User(req.Context(), token, id)
 			if err != nil {
 				status := http.StatusInternalServerError
 				if errors.Is(err, usecase.ErrUnauthorized) || errors.Is(err, usecase.ErrForbidden) {
 					status = http.StatusForbidden
 				}
-				r.err(w, status, fmt.Errorf("get user: %w", err))
+				r.err(w, status, fmt.Errorf("get: %w", err))
 				return
 			}
 			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(map[string]interface{}{"ok": true, "user": user})
+			json.NewEncoder(w).Encode(map[string]interface{}{"ok": true, nameEntity: entity})
 		}
 
 	case http.MethodPost:
-		if id != 0 {
-			r.err(w, http.StatusBadRequest, errors.New("user ID must not be specified in POST"))
-			return
-		}
+		// Change
 		var input domain.User
 		if err := json.NewDecoder(req.Body).Decode(&input); err != nil {
 			r.err(w, http.StatusBadRequest, errors.New("invalid JSON"))
 			return
 		}
-		newID, err := r.useCase.CreateUser(req.Context(), token, &input)
+		// Change
+		id, err := r.useCase.CreateUser(req.Context(), token, &input)
 		if err != nil {
 			status := http.StatusInternalServerError
 			if errors.Is(err, usecase.ErrUnauthorized) {
@@ -84,22 +86,24 @@ func (r *Router) users(w http.ResponseWriter, req *http.Request) {
 			} else if errors.Is(err, usecase.ErrForbidden) {
 				status = http.StatusForbidden
 			}
-			r.err(w, status, fmt.Errorf("create user: %w", err))
+			r.err(w, status, fmt.Errorf("create: %w", err))
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(map[string]interface{}{"ok": true, "id": newID})
+		json.NewEncoder(w).Encode(map[string]interface{}{"ok": true, "id": id})
 
 	case http.MethodPut:
 		if id == 0 {
-			r.err(w, http.StatusBadRequest, errors.New("user ID required for update"))
+			r.err(w, http.StatusBadRequest, errors.New("ID required for update"))
 			return
 		}
+		// Change
 		var input domain.User
 		if err := json.NewDecoder(req.Body).Decode(&input); err != nil {
 			r.err(w, http.StatusBadRequest, errors.New("invalid JSON"))
 			return
 		}
+		// Change
 		err := r.useCase.UpdateUser(req.Context(), token, id, &input)
 		if err != nil {
 			status := http.StatusInternalServerError
@@ -108,7 +112,7 @@ func (r *Router) users(w http.ResponseWriter, req *http.Request) {
 			} else if errors.Is(err, usecase.ErrForbidden) {
 				status = http.StatusForbidden
 			}
-			r.err(w, status, fmt.Errorf("update user: %w", err))
+			r.err(w, status, fmt.Errorf("update: %w", err))
 			return
 		}
 		w.WriteHeader(http.StatusOK)
@@ -116,9 +120,10 @@ func (r *Router) users(w http.ResponseWriter, req *http.Request) {
 
 	case http.MethodDelete:
 		if id == 0 {
-			r.err(w, http.StatusBadRequest, errors.New("user ID required for delete"))
+			r.err(w, http.StatusBadRequest, errors.New("ID required for delete"))
 			return
 		}
+		// Change
 		err := r.useCase.DeleteUser(req.Context(), token, id)
 		if err != nil {
 			status := http.StatusInternalServerError
@@ -127,7 +132,7 @@ func (r *Router) users(w http.ResponseWriter, req *http.Request) {
 			} else if errors.Is(err, usecase.ErrForbidden) {
 				status = http.StatusForbidden
 			}
-			r.err(w, status, fmt.Errorf("delete user: %w", err))
+			r.err(w, status, fmt.Errorf("delete: %w", err))
 			return
 		}
 		w.WriteHeader(http.StatusOK)
