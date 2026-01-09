@@ -30,6 +30,11 @@ curl -X 'POST' 'http://localhost:8080/api/create_admin'
 
 пробросить 1 роут с ограничениями
 по примеру сделать остальные
+animals
+clients 
+records
+timesheet
+users
 соеденить с фронтом
 добить фронт график
 
