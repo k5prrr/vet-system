@@ -3,6 +3,7 @@ package usecase
 import (
 	"app/internal/app/core/domain"
 	"context"
+	"errors"
 	"fmt"
 )
 
@@ -25,6 +26,14 @@ func (u *UseCase) CreateUser(ctx context.Context, token string, input *domain.Us
 	secret, err := u.service.Auth.Secret(64)
 	if err != nil {
 		return 0, fmt.Errorf("generate auth secret: %w", err)
+	}
+
+	copyUser, err := u.service.RepoUser.GetBy(ctx, "phone", input.Phone)
+	if err != nil && errors.Is(err, errors.New("not found")) {
+		return 0, fmt.Errorf("get user by phone: %w", err)
+	}
+	if copyUser != nil {
+		return 0, fmt.Errorf("phone already exists")
 	}
 
 	entity := *input

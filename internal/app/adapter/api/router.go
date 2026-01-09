@@ -28,10 +28,15 @@ func (r *Router) init() {
 	r.HandleFunc("/api/init", r.initData)
 
 	r.HandleFunc("/api/users", r.users)
+	r.HandleFunc("/api/users/", r.users)
 	r.HandleFunc("/api/animals", r.animals)
+	r.HandleFunc("/api/animals/", r.animals)
 	r.HandleFunc("/api/clients", r.clients)
+	r.HandleFunc("/api/clients/", r.clients)
 	r.HandleFunc("/api/records", r.records)
+	r.HandleFunc("/api/records/", r.records)
 	r.HandleFunc("/api/timesheets", r.timesheets)
+	r.HandleFunc("/api/timesheets/", r.timesheets)
 
 	// report
 

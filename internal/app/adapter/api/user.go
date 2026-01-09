@@ -77,7 +77,6 @@ func (r *Router) users(w http.ResponseWriter, req *http.Request) {
 			r.err(w, http.StatusBadRequest, errors.New("invalid JSON"))
 			return
 		}
-		fmt.Println(input)
 		// Change
 		id, err := r.useCase.CreateUser(req.Context(), token, &input)
 		if err != nil {

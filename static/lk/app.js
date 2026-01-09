@@ -270,7 +270,83 @@ ${views.header(data)}
         `)
 
     },
-    user:data => {},
+    user: data => {
+        let user = { fio: '', roleID: 2, phone: '', password: '', description: '' };
+        let isNew = true;
+
+        if (data && data.id) {
+            isNew = false
+            const found = storage.users && storage.users.find(u => u.id === data.id)
+            if (found) {
+                user = found //{ ...found }
+            } else {
+                notify.err('Пользователь не найден')
+                return;
+            }
+        }
+
+        const roleOptions = Object.entries(storage.userRoles || {}).map(([id, role]) => ({
+            id: Number(id),
+            name: role.name,
+            code: role.code
+        }));
+
+        utils.setText(`
+${views.header(data)}
+<div class="content" id="content">
+  <div class="title block">
+    <h1>${isNew ? 'Добавить пользователя' : 'Редактировать пользователя'}</h1>
+    <div class="text">
+      <p>Поля с * обязательны для заполнения.</p>
+      <p>Только админ может управлять пользователями.</p>
+    </div>
+    ${isNew ? '' : `<div class="buttons">
+        <button class="btn" onmousedown="app.deleteUser(${data.id})">Удалить</button>
+    </div>`}
+  </div>
+  <form class="form1 block" onsubmit="app.saveUser(this, ${isNew ? 'true' : 'false'}); return false">
+    <input type="hidden" name="id" value="${user.id || ''}">
+    
+    <label class="name required">ФИО</label>
+    <div class="value">
+      <input type="text" name="fio" value="${utils.escapeHtml(user.fio)}" required maxlength="255">
+    </div>
+    
+    <label class="name required">Роль</label>
+    <div class="value">
+      <select name="roleID" required>
+        ${roleOptions.map(r =>
+            `<option value="${r.id}" ${user.roleID === r.id ? 'selected' : ''}>${r.name}</option>`
+        ).join('')}
+      </select>
+    </div>
+    
+    <label class="name required">Телефон</label>
+    <div class="value">
+      <input type="tel" name="phone" value="${utils.escapeHtml(user.phone)}" 
+        placeholder="+7 (___) ___-__-__"
+        oninput="app.inputPhone(this)"
+       maxlength="20">
+    </div>
+    
+    <label class="name ${isNew ? 'required' : ''}">Пароль${isNew ? '' : ' (оставьте пустым, чтобы не менять)'}</label>
+    <div class="value">
+      <input type="password" name="password" ${isNew ? 'required' : ''} maxlength="64">
+    </div>
+    
+    <label class="name">Описание</label>
+    <div class="value">
+      <textarea name="description" maxlength="500">${user.description ? utils.escapeHtml(user.description) : ''}</textarea>
+    </div>
+    
+    <div class="buttons">
+      <button class="btn btn-mark">${isNew ? 'Создать' : 'Сохранить'}</button>
+      <button type="button" class="btn" onmousedown="pages.users()">Отмена</button>
+    </div>
+  </form>
+</div>
+`);
+    },
 
     report: data => {
         app.updateEntity(data, 'report')
@@ -2001,30 +2077,55 @@ const app = {
         })
     },
 
-    createUser: () => {
-        let data = {
-            fio: "Иванов Иван Иванович",
-            roleID: 3,  // 2 — client, 3 — doctor, 4 — admin
-            phone: "+79675552322",
-            password: "ps",
-            description: "Новый врач"
+    saveUser: (form, isNew) => {
+        const formData = new FormData(form)
+        const data = {
+            id: formData.get('id') || undefined,
+            fio: formData.get('fio').trim(),
+            roleID: parseInt(formData.get('roleID'), 10),
+            phone: formData.get('phone').trim().replace(/\D/g, ''),
+            description: formData.get('description').trim() || null
+        };
+
+        // Пароль отправляем ТОЛЬКО если он указан
+        const password = formData.get('password').trim()
+        if (password) {
+            data.password = password
+        } else if (isNew) {
+            notify.err('Пароль обязателен при создании')
+            return;
         }
-        ajax.json('/api/users', data, answer => {
-           if (!answer) {
-               notify.err("Ех, попробуйте позднее")
-               return;
-           }
-           if (answer.error) {
-               notify.err(answer.error)
-               return;
-           }
-            if (answer.id) {
-                notify.message(`Успешно создан id:${answer.id}`)
-                return;
+
+
+        if (!isNew && data.id) {
+            data.id = parseInt(data.id, 10)
+            data.ajaxMethod = 'PUT'
+        }
+
+        const method = isNew ? 'POST' : 'PUT'
+        const url = isNew ? '/api/users' : `/api/users/${data.id}`
+
+        ajax.json(url, data, answer => {
+            if (answer && answer.ok) {
+                notify.message(isNew ? 'Пользователь создан' : 'Пользователь обновлён')
+                pages.users({ update: true })
+            } else {
+                notify.err(answer?.error || 'Ошибка сохранения')
             }
         })
     },
+    deleteUser: (id) => {
+       if (prompt('Для подтверждения введите "удалить"', '') != 'удалить') return;
 
+        ajax.json(`/api/users/${id}`, {ajaxMethod: 'DELETE'}, answer => {
+            if (answer && answer.ok) {
+                notify.message('Пользователь удалён')
+                pages.users({ update: true })
+            } else {
+                notify.err(answer?.error || 'Ошибка удаления')
+            }
+        })
+    },
 
 
     loginTest: () => {
