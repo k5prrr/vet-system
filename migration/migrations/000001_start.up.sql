@@ -6,7 +6,7 @@ CREATE SEQUENCE clients_id_seq INCREMENT 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 
 CREATE TABLE "public"."clients" (
     "id" bigint DEFAULT nextval('clients_id_seq') NOT NULL,
     "fio" varchar NOT NULL,
-    "phone" varchar(255) NOT NULL,
+    "phone" varchar(255) NOT NULL UNIQUE,
     "birth_date" timestamptz,
     "parent_id" bigint NOT NULL,
     "description" text NOT NULL,
@@ -189,6 +189,8 @@ INSERT INTO "user_roles" ("id", "name", "code", "created_at", "updated_at") VALU
 CREATE UNIQUE INDEX users_phone ON public.users USING btree (phone);
 
 CREATE INDEX users_fio ON public.users USING btree (fio);
+
+CREATE INDEX unique_client_phone ON public.clients USING btree (phone);
 
 CREATE INDEX users_role_id ON public.users USING btree (role_id);
 

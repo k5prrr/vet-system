@@ -12,11 +12,14 @@ show_help() {
 case "$1" in
     # help: start - init, base, run, create_admin
     start)
-      ./make.sh init && ./make.sh base && ./make.sh run && curl -X 'POST' 'http://localhost:8080/api/create_admin'
+      ./make.sh init && ./make.sh base && ./make.sh run
+      #&& curl -X 'POST' 'http://localhost:8080/api/create_admin'
       ;;
     # help: init - инициализация модуля, зависимостей и .env
     init)
-        go mod init app
+        if [ ! -f go.mod ]; then
+            go mod init app
+        fi
         go get github.com/jackc/pgx/v5
         go mod tidy
 

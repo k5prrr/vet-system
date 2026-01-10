@@ -52,10 +52,12 @@ func (u *UseCase) Records(ctx context.Context, token string) ([]domain.Record, e
 	}
 
 	var records []domain.Record
-	if user.RoleID == RoleClient {
-		records, err = u.service.RepoRecord.ListBy(ctx, "client_id", strconv.FormatInt(user.ID, 10), 0, 0)
-	} else {
+	if user.RoleID == RoleAdmin {
 		records, err = u.service.RepoRecord.List(ctx, 0, 0)
+	} else if user.RoleID == RoleDoctor {
+		records, err = u.service.RepoRecord.ListBy(ctx, "user_id", strconv.FormatInt(user.ID, 10), 0, 0)
+	} else {
+		records, err = u.service.RepoRecord.ListBy(ctx, "client_id", strconv.FormatInt(user.ID, 10), 0, 0)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("list records: %w", err)

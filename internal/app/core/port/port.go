@@ -11,6 +11,7 @@ type IUseCase interface {
 	Login(ctx context.Context, phone, password, ip string) (string, error)
 	CurrentUser(ctx context.Context, token string) (*domain.User, error)
 	InitData(ctx context.Context, token string) (*domain.InitData, error)
+	Report(ctx context.Context, token string) (*domain.Report, error)
 
 	CreateUser(ctx context.Context, token string, input *domain.User) (int64, error)
 	User(ctx context.Context, token string, id int64) (*domain.User, error)

@@ -40,7 +40,7 @@ func (r *Router) login(w http.ResponseWriter, req *http.Request) {
 	}
 
 	input.Phone = utilities.OnlyDigits(input.Phone)
-	if len(input.Phone) < 10 {
+	if len(input.Phone) < 1 {
 		r.err(w, http.StatusBadRequest, errors.New("invalid phone"))
 		return
 	}

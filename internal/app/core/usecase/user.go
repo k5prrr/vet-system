@@ -106,11 +106,13 @@ func (u *UseCase) UpdateUser(ctx context.Context, token string, id int64, input 
 	updatedUser.AuthSecret = targetUser.AuthSecret
 
 	if input.PasswordHash != "" {
+		//fmt.Printf("Изменение пароля на %s\n", input.PasswordHash)
 		hashed, err := u.service.Auth.PasswordHash(input.PasswordHash)
 		if err != nil {
 			return fmt.Errorf("hash password: %w", err)
 		}
 		updatedUser.PasswordHash = hashed
+		//fmt.Printf("Хеш %s\n", hashed)
 	} else {
 		updatedUser.PasswordHash = targetUser.PasswordHash
 	}

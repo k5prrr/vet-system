@@ -26,6 +26,7 @@ func (r *Router) init() {
 
 	//r.HandleFunc("/api/current_user", r.currentUser)
 	r.HandleFunc("/api/init", r.initData)
+	r.HandleFunc("/api/report", r.report)
 
 	r.HandleFunc("/api/users", r.users)
 	r.HandleFunc("/api/users/", r.users)
@@ -37,8 +38,6 @@ func (r *Router) init() {
 	r.HandleFunc("/api/records/", r.records)
 	r.HandleFunc("/api/timesheets", r.timesheets)
 	r.HandleFunc("/api/timesheets/", r.timesheets)
-
-	// report
 
 	r.mux.Handle("/",
 		http.StripPrefix("/",
