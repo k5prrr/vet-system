@@ -30,7 +30,7 @@ ${currentUser.role == 'admin' ? `
     <button onmousedown="pages.report({update:true})"><img src="./img/ico/file-earmark-bar-graph-fill.svg" alt="ico">Отчёт</button>
     
     <h4></h4>
-    <button onmousedown="pages.timesheet({update:true})"><img src="./img/ico/calendar2-week-fill.svg" alt="ico">Расписание</button>
+    <button onmousedown="pages.timesheets({update:true})"><img src="./img/ico/calendar2-week-fill.svg" alt="ico">Расписание</button>
     <button onmousedown="pages.records({update:true})"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
     <button onmousedown="pages.clients({update:true})"><img src="./img/ico/person-vcard.svg" alt="ico">Клиенты</button>
     <button onmousedown="pages.animals({update:true})"><img src="./img/ico/bandaid-fill.svg" alt="ico">Животные</button>
@@ -43,7 +43,7 @@ ${currentUser.role == 'admin' ? `
 `:''}
 ${currentUser.role == 'doctor' ? `
     <h4></h4>
-    <button onmousedown="pages.timesheet({update:true})"><img src="./img/ico/calendar2-week-fill.svg" alt="ico">Расписание</button>
+    <button onmousedown="pages.timesheets({update:true})"><img src="./img/ico/calendar2-week-fill.svg" alt="ico">Расписание</button>
     <button onmousedown="pages.records({update:true})"><img src="./img/ico/clipboard-heart-fill.svg" alt="ico">Записи</button>
     <button onmousedown="pages.clients({update:true})"><img src="./img/ico/person-vcard.svg" alt="ico">Клиенты</button>
     <button onmousedown="pages.animals({update:true})"><img src="./img/ico/bandaid-fill.svg" alt="ico">Животные</button>
@@ -334,8 +334,18 @@ ${views.header(data)}
   `)
     },
 
-    timesheet: data => {
+    timesheets: data => {
         app.updateEntity(data, 'timesheets')
+        app.updateEntity(data, 'users', () => {
+            pages.timesheets()
+        })
+        app.updateEntity(data, 'records', () => {
+            pages.timesheets()
+        })
+        if (!storage.users) storage.users = []
+
+        let headDays = app.listMonthDays3()
+        let times = app.listTimesDay().reverse()
         utils.setText(` 
         ${views.header(data)}
         <div class="content" id="content">
@@ -343,24 +353,27 @@ ${views.header(data)}
                 <h1>Расписание</h1>
                 <div class="text">
                     <p>
-Аааааааааааааа!
-думаю.. Надо дни и часы разделить на клеточки по пол часа..
-Так.. 
-Тип.. А как на нескольких врачей.. И как админ будет видеть расписание нескольких врачей
-Ну каждый врач своё расписание - это да.. А как несколько в одно? А если врачей 10? 
-либо в виде цифры в клетках.. Если
-
-<br><br>
-Показываем фильтр по году и месяцу
-<br>и показываем только 1 месяц
-
-Клеточки - да, но как показывать разных врачей и их наложение в одно время? 
-Пример 4 врача
-
-</p>
+                    1 приём = 30 минутам
+                    </p><p>
+                    Управление: месячным графиком только у админа, а управление дневным у админа и врача.
+                    Каждый врач может управлять только своим дневным графиком.
+                    </p>
+                </div>
+                <div class="buttons">
+                    <button class="btn" onmousedown="pages.timesheets({update:true})">Обновить</button>
                 </div>
             </div>
-            
+            <div class="title block">
+                <div class="calendarMonth" id="calendarMonth">
+                <div>title</div>${headDays.map(n => `<div>${n}</div>`).join('')}
+                ${storage.users.filter(item => item.roleID == 3).map(user => `
+                <button class="btn" onmousedown="pages.user({id:user.id})">${user.fio}</button>${headDays.map(n => `<button class="btn" onmousedown="">${n}</button>`).join('')}
+                `).join('')}
+</div>
+                <div class="calendarDay" id="calendarDay">
+                ${times.map(time => `<div>${time}</div>`).join('')}
+</div>
+            </div>
         </div>
         `)
     },
@@ -408,7 +421,7 @@ ${views.header(data)}
         </div>
     </div>
     ${currentUser.role == 'admin'? `
-    <div class="list block" style="grid-template-columns: 1fr 1fr 16vw 18vw 2fr 1fr;">
+    <div class="list block" style="grid-template-columns: 3vw 8vw 1fr 1fr 16vw 12vw;">
         <div class="line">
             <div class="grid-item grid-header">ID</div>
             <div class="grid-item grid-header">Статус</div>
@@ -580,14 +593,14 @@ ${views.header(data)}
       <textarea name="complaints" maxlength="500">${record.complaints ? utils.escapeHtml(record.complaints) : ''}</textarea>
     </div>
 
-    <label class="name required">Осмотр</label>
+    <label class="name ">Осмотр</label>
     <div class="value">
-      <textarea name="examination" required maxlength="1000">${record.examination ? utils.escapeHtml(record.examination) : ''}</textarea>
+      <textarea name="examination"  maxlength="1000">${record.examination ? utils.escapeHtml(record.examination) : ''}</textarea>
     </div>
 
-    <label class="name required">Рекомендации</label>
+    <label class="name ">Рекомендации</label>
     <div class="value">
-      <textarea name="recommendations" required maxlength="1000">${record.recommendations ? utils.escapeHtml(record.recommendations) : ''}</textarea>
+      <textarea name="recommendations"  maxlength="1000">${record.recommendations ? utils.escapeHtml(record.recommendations) : ''}</textarea>
     </div>
 
     <div class="buttons">
@@ -1076,7 +1089,7 @@ const app = {
         })
     },
 
-    saveClient: function(form, isNew) {
+    saveClient: (form, isNew) => {
         const formData = new FormData(form);
         const data = {
             fio: formData.get('fio').trim(),
@@ -1101,7 +1114,7 @@ const app = {
         });
     },
 
-    deleteClient: function(id) {
+    deleteClient: id => {
         if (prompt('Для подтверждения введите "удалить"', '') !== 'удалить') return;
         ajax.json(`/api/clients/${id}`, { ajaxMethod: 'DELETE' }, function(answer) {
             if (answer && answer.ok) {
@@ -1197,7 +1210,7 @@ const app = {
 
         // Валидация
         if (!data.clientID || !data.animalID || !data.userID ||
-            !data.statusID || !data.dateTime || !data.examination || !data.recommendations) {
+            !data.statusID || !data.dateTime) {
             notify.err('Заполните все обязательные поля');
             return;
         }
@@ -1234,7 +1247,32 @@ const app = {
     },
 
 
+    listMonthDays3:() => {
+        const backDays = 3
+        const nextDays = 14
 
+        const totalDays = backDays + nextDays + 1;
+        const result = new Array(totalDays);
+        const now = new Date()
+
+        now.setDate(now.getDate() - backDays);
+
+        for (let i = 0; i < totalDays; i++) {
+            result[i] = now.getDate()
+            now.setDate(now.getDate() + 1)
+        }
+
+        return result
+    },
+    listTimesDay:() => {
+        const times = [];
+        for (let hour = 8; hour <= 20; hour++) {
+            times.push(`${String(hour).padStart(2, '0')}:00`)
+            times.push(`${String(hour).padStart(2, '0')}:30`)
+        }
+
+        return times
+    }
     
 }
 
@@ -1278,13 +1316,7 @@ const tests = {
 
         ajax.getJson('/api/users')
 
-        /*
-animals
-clients
-records
-timesheet
-users
-         */
+
     },
 }
 app.main()

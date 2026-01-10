@@ -798,3 +798,29 @@ padding: 1vw;
     cursor: default;
 }
 
+
+.calendarMonth{
+    width: 100%;
+    display: grid;
+    grid-template-columns: 3fr repeat(18, 1fr);
+    gap: 0;
+    text-align: center;
+}
+.calendarMonth .btn{
+    margin: 0;
+    padding: 0.5vw 0;
+    text-align: center;
+    border: 0;
+    border-radius: 0;
+}
+.calendarMonth .btn:nth-child(n):nth-child(19n-14) {
+    background-color: #ddd;
+}
+
+.calendarDay div {
+    display: inline-block;
+    transform: rotate(-90deg);
+    transform-origin: bottom right;
+    width: 2.8vw;
+    height: 2vw;
+}
