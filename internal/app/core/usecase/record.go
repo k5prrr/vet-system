@@ -22,6 +22,11 @@ func (u *UseCase) CreateRecord(ctx context.Context, token string, input *domain.
 	}
 	if user.RoleID == RoleClient {
 		entity.UserID = 0
+		client, err := u.service.RepoClient.GetBy(ctx, "phone", user.Phone)
+		if err != nil {
+			return 0, fmt.Errorf("list animals: %w", err)
+		}
+		entity.ClientID = client.ID
 	}
 
 	id, err := u.service.RepoRecord.Add(ctx, &entity)

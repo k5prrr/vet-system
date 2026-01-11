@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 	"fmt"
+	"log"
+	"time"
 )
 
 type App struct {
@@ -16,6 +18,14 @@ func New() *App {
 }
 
 func (a *App) Run(ctx context.Context) error {
+	// Ждём, пока БД станет доступной
+	for {
+		if err := a.di.DB().Pool().Ping(ctx); err == nil {
+			break
+		}
+		log.Println("Waiting for database...")
+		time.Sleep(2 * time.Second)
+	}
 
 	migration := a.di.Migration()
 	if err := migration.Run(ctx); err != nil {

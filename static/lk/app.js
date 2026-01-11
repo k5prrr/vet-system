@@ -170,7 +170,7 @@ let pages = {
                 </div>
             </div>
             `}
-            <div class="title block" style="opacity: 0.5">
+            <div class="title block" style="opacity: 0.7">
                 <h1>Тест</h1>
                 <div class="text">
                     <p>Тестовый режим для демонстрации возможностей каждой роли</p>
@@ -409,14 +409,15 @@ title="${user.fio} ${day[1]}"
     },
 
     records: data => {
-        if (currentUser.role === 'doctor' || currentUser.role === 'admin') {
-            app.updateEntity(data, 'records', () => {
+        app.updateEntity(data, 'records', () => {
 
-                storage.records.forEach(item => {
-                    item.dateTimeShow = `${item.dateTime.split('T')[0]}<br>${item.dateTime.split('T')[1].split('+')[0]}`
-                })
-                pages.records()
+            storage.records.forEach(item => {
+                item.dateTimeShow = `${item.dateTime.split('T')[0]}<br>${item.dateTime.split('T')[1].split('+')[0]}`
             })
+            pages.records()
+        })
+
+        if (currentUser.role === 'doctor' || currentUser.role === 'admin') {
             app.updateEntity(data, 'clients', () => {
                 storage.clientsMapID = storage.clients.reduce((acc, client) => {
                     acc[client.id] = client
@@ -497,7 +498,7 @@ ${views.header(data)}
     </div>
     `:''}
     ${currentUser.role == 'client' ? `
-    <div class="list block" style="grid-template-columns: 1fr 1fr 2fr 2fr 2fr 1fr;">
+    <div class="list block" style="grid-template-columns: 1fr 1fr 2fr 1fr;">
         <div class="line">
             <div class="grid-item grid-header">ID</div>
             <div class="grid-item grid-header">Статус</div>
@@ -569,13 +570,14 @@ ${views.header(data)}
       <p>Поля с * обязательны для заполнения.</p>
       <p>Только доктор и админ могут управлять записями.</p>
     </div>
-    ${!isNew ? `<div class="buttons">
+    ${!isNew && currentUser.role !== 'client' ? `<div class="buttons">
       <button class="btn" onmousedown="app.deleteRecord(${record.id})">Удалить</button>
     </div>` : ''}
   </div>
   <form class="form1 block" onsubmit="app.saveRecord(this, ${isNew}); return false">
     <input type="hidden" name="id" value="${record.id}">
     
+    ${currentUser.role === 'client' ? `<input type="hidden" name="clientID" value="1">`:`
     <label class="name required">Клиент</label>
     <div class="value">
       <select name="clientID" required onchange="app.onClientChange(this)">
@@ -585,7 +587,9 @@ ${views.header(data)}
         ).join('')}
       </select>
     </div>
+    `}
 
+${currentUser.role === 'client' && !isNew ? `<label class="name required">Животное ${record.animalID && animalsForClient.filter(item => item.id == record.animalID)[0].name}</label>` : `
     <label class="name required">Животное</label>
     <div class="value">
       <select name="animalID" required id="animalSelect">
@@ -594,7 +598,7 @@ ${views.header(data)}
             `<option value="${a.id}" ${record.animalID == a.id ? 'selected' : ''}>${utils.escapeHtml(a.name)} (${storage.animalTypes?.[a.animalTypeID]?.name || '???'})</option>`
         ).join('')}
       </select>
-    </div>
+    </div>`}
 
 ${currentUser.role == 'admin' ? `
     <label class="name required">Врач</label>
@@ -608,10 +612,11 @@ ${currentUser.role == 'admin' ? `
     </div>
     `:''}
     ${currentUser.role == 'doctor' ? `<input type="hidden" name="userID" value="${currentUser.id}">`:''}
+    ${currentUser.role == 'client' ? `<input type="hidden" name="userID" value="1">`:''}
         
     
     
-
+${currentUser.role === 'client' && isNew ? `<input type="hidden" name="statusID" value="1">`:`
     <label class="name required">Статус</label>
     <div class="value">
       <select name="statusID" required>
@@ -620,36 +625,42 @@ ${currentUser.role == 'admin' ? `
         ).join('')}
       </select>
     </div>
+`}
 
+${currentUser.role === 'client' && isNew ? `<input type="hidden" name="dateTime" value="${utils.dateRFC3339(new Date()) }">`:`
     <label class="name required">Дата и время приёма</label>
     <div class="value">
       <input type="datetime-local" name="dateTime"
         value="${record.dateTime.slice(0, 16)}"
         required>
     </div>
-
+`}
     <label class="name">Жалобы</label>
     <div class="value">
       <textarea name="complaints" maxlength="500">${record.complaints ? utils.escapeHtml(record.complaints) : ''}</textarea>
     </div>
 
+${currentUser.role === 'client' && isNew ? `<input type="hidden" name="examination" value="">`:`
     <label class="name ">Осмотр</label>
     <div class="value">
       <textarea name="examination"  maxlength="1000">${record.examination ? utils.escapeHtml(record.examination) : ''}</textarea>
     </div>
-
+`}
+${currentUser.role === 'client' && isNew ? `<input type="hidden" name="recommendations" value="">`:`
     <label class="name ">Рекомендации</label>
     <div class="value">
       <textarea name="recommendations"  maxlength="1000">${record.recommendations ? utils.escapeHtml(record.recommendations) : ''}</textarea>
     </div>
-
+`}
     <div class="buttons">
-      <button class="btn btn-mark">${isNew ? 'Создать запись' : 'Сохранить'}</button>
+      ${currentUser.role == 'client' && !isNew ? '' : `<button class="btn btn-mark">${isNew ? 'Создать запись' : 'Сохранить'}</button>`}
       <button type="button" class="btn" onmousedown="pages.records()">Отмена</button>
     </div>
   </form>
 </div>
   `);
+        if (currentUser.role === 'client')
+            app.onClientChange(0)
     },
 
 
@@ -1223,9 +1234,9 @@ const app = {
         if (!animalSelect) return;
 
         const allAnimals = storage.animals || [];
-        const filtered = clientId
+        const filtered = currentUser.role === 'client' ? allAnimals : (clientId
             ? allAnimals.filter(a => a.clientID === clientId)
-            : [];
+            : [])
 
         animalSelect.innerHTML = '<option value="">Выберите животное</option>' +
             filtered.map(a =>

@@ -1,0 +1,26 @@
+services:
+  db:
+    container_name: pg1
+    image: docker.io/library/postgres:15.2
+    env_file:
+      - .env
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
+      - ./migration/docker:/docker-entrypoint-initdb.d
+    ports:
+      - "15432:5432"
+    restart: always
+
+  app:
+    container_name: go_app
+    build: .
+    env_file:
+      - .env
+    environment:
+      - APP_POSTGRES_HOST=db
+      - APP_SERVER_ADDRESS=:8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    restart: unless-stopped
