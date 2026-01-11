@@ -4,7 +4,7 @@ import "time"
 
 type Timesheet struct {
 	ID       int64     `json:"id" gorm:"primaryKey;column:id;autoIncrement"`
-	UserID   int64     `json:"user_id" gorm:"column:user_id;not null"`
+	UserID   int64     `json:"userID" gorm:"column:user_id;not null"`
 	ParentID int64     `json:"parentID" gorm:"column:parent_id;not null"`
 	Date     time.Time `json:"date" gorm:"column:date;not null"`
 

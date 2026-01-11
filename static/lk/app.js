@@ -335,17 +335,44 @@ ${views.header(data)}
     },
 
     timesheets: data => {
-        app.updateEntity(data, 'timesheets')
+        app.updateEntity(data, 'clients', () => {
+
+        })
+        app.updateEntity(data, 'animals', () => {
+
+        })
+        app.updateEntity(data, 'timesheets', () => {
+            storage.mapDateDoctorIDMark = {} // Пометка смены
+            storage.timesheets.forEach(timesheet => {
+                storage.mapDateDoctorIDMark[`${timesheet.date.split('T')[0]} ${timesheet.userID}`] = timesheet.id
+            })
+        })
         app.updateEntity(data, 'users', () => {
             pages.timesheets()
         })
         app.updateEntity(data, 'records', () => {
+            storage.mapDateDoctorIDCount = {} // Дата врачИД : кол записей
+            storage.mapDateDoctorIDTimeRecordID = {} // Дата врачИД время: ид записи
+            storage.records.forEach(record => {
+                let date = record.dateTime.split('T')[0]
+
+                let tmp = record.dateTime.split('T')[1].split(':')
+                let time = `${tmp[0]}:${Number(tmp[1]) > 29 ? '30':'00'}`
+
+                if (storage.mapDateDoctorIDCount[`${date} ${record.userID}`])
+                    storage.mapDateDoctorIDCount[`${date} ${record.userID}`]++
+                else
+                    storage.mapDateDoctorIDCount[`${date} ${record.userID}`] = 1
+
+                storage.mapDateDoctorIDTimeRecordID[`${date} ${record.userID} ${time}`] = record.id
+            })
             pages.timesheets()
         })
         if (!storage.users) storage.users = []
+        storage.doctors = storage.users.filter(item => item.roleID == 3)
 
         let headDays = app.listMonthDays3()
-        let times = app.listTimesDay().reverse()
+
         utils.setText(` 
         ${views.header(data)}
         <div class="content" id="content">
@@ -365,14 +392,17 @@ ${views.header(data)}
             </div>
             <div class="title block">
                 <div class="calendarMonth" id="calendarMonth">
-                <div>title</div>${headDays.map(n => `<div>${n}</div>`).join('')}
-                ${storage.users.filter(item => item.roleID == 3).map(user => `
-                <button class="btn" onmousedown="pages.user({id:user.id})">${user.fio}</button>${headDays.map(n => `<button class="btn" onmousedown="">${n}</button>`).join('')}
-                `).join('')}
-</div>
-                <div class="calendarDay" id="calendarDay">
-                ${times.map(time => `<div>${time}</div>`).join('')}
-</div>
+                    <div>title</div>${headDays.map(day => `<button class="btn" onmousedown="app.openCalendarDay('${day[0]}')" title="">${day[1]}</button>`).join('')}
+                    ${storage.doctors.map(user => `
+                    <button class="btn" onmousedown="pages.user({id:user.id})">${user.fio}</button>${headDays.map(day => `<button 
+id="day_${day[0]}_${user.id}"
+class="btn${storage.mapDateDoctorIDMark && storage.mapDateDoctorIDMark[`${day[0]} ${user.id}`] ? ' mark':''}" 
+onmousedown="app.changeCalendarDay('${day[0]}', ${user.id});app.openCalendarDay('${day[0]}')" 
+title="${user.fio} ${day[1]}"
+>${storage.mapDateDoctorIDCount && storage.mapDateDoctorIDCount[`${day[0]} ${user.id}`] ? storage.mapDateDoctorIDCount[`${day[0]} ${user.id}`] : ''}</button>`).join('')}
+                    `).join('')}
+                </div>
+                <div class="calendarDay" id="calendarDay"></div>
             </div>
         </div>
         `)
@@ -491,9 +521,9 @@ ${views.header(data)}
             id: 0,
             clientID: 0,
             animalID: 0,
-            userID: 0,
+            userID: data && data.userID ? data.userID : 0,
             statusID: 1, // по умолчанию "новый"
-            dateTime: '',
+            dateTime: data && data.dateTime ? data.dateTime : '',
             complaints: '',
             examination: '',
             recommendations: '',
@@ -530,7 +560,7 @@ ${views.header(data)}
 ${views.header(data)}
 <div class="content" id="content">
   <div class="title block">
-    <h1>${isNew ? 'Создать запись' : 'Редактировать запись'}</h1>
+    <h1>${isNew ? 'Создать запись' : `Редактировать запись ID ${record.id}`}</h1>
     <div class="text">
       <p>Поля с * обязательны для заполнения.</p>
       <p>Только доктор и админ могут управлять записями.</p>
@@ -1258,7 +1288,10 @@ const app = {
         now.setDate(now.getDate() - backDays);
 
         for (let i = 0; i < totalDays; i++) {
-            result[i] = now.getDate()
+            result[i] = [
+                `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`,
+                now.getDate()
+            ]
             now.setDate(now.getDate() + 1)
         }
 
@@ -1272,8 +1305,80 @@ const app = {
         }
 
         return times
-    }
+    },
+
+
+
+    openCalendarDay: (date) => {
+        // Кто врач
+        // У кого есть записи на этотдень или помечен как рабочий
+        let doctors = storage.users.filter(user => true)
+        let times = app.listTimesDay().reverse()
+
+
+        utils.setText(`
+        <style>.calendarDay{ grid-template-columns: 2fr repeat(${doctors.length}, 1fr); }</style>
+        <div>${date}</div>${doctors.map(user => `<div class="doctor${storage.mapDateDoctorIDMark && storage.mapDateDoctorIDMark[`${date} ${user.id}`] ? ' mark':''}">${user.fio} ${storage.mapDateDoctorIDCount && storage.mapDateDoctorIDCount[`${date} ${user.id}`] ? storage.mapDateDoctorIDCount[`${date} ${user.id}`] : ''}</div>`).join('')}
+        ${times.map(time => `
+            <div>${time}</div>${doctors.map(user => storage.mapDateDoctorIDTimeRecordID && storage.mapDateDoctorIDTimeRecordID[`${date} ${user.id} ${time}`] ? 
+            `<button 
+class="btn' mark"
+title="${user.fio} ${time}"
+onmousedown="pages.record({id:${storage.mapDateDoctorIDTimeRecordID[`${date} ${user.id} ${time}`]}})"
+>+</button>`:
+            `<button 
+class="btn"
+title="${user.fio} ${time}"
+onmousedown="pages.record({
+    dateTime:'${`${date}T${time}`}',
+    userID:${user.id}
+})"
+></button>`
     
+    ).join('')}
+        `).join('')}
+        `, 'calendarDay')
+    },
+        changeCalendarDay: (date, userID) => {
+            const key = `${date} ${userID}`;
+            const button = document.getElementById(`day_${date}_${userID}`);
+
+            if (storage.mapDateDoctorIDMark[key]) {
+                // Удаляем смену
+                let oldID = storage.mapDateDoctorIDMark[key]
+                delete storage.mapDateDoctorIDMark[key]
+                if (button) button.classList.remove('mark');
+                ajax.json(`/api/timesheets/${oldID}`, {
+                    ajaxMethod: 'DELETE'
+                }, (answer) => {
+                    if (!answer.ok) {
+                        notify.err('Ошибка удаления смены');
+                        // Откатываем состояние при ошибке
+                        storage.mapDateDoctorIDMark[key] = oldID
+                        if (button) button.classList.add('mark');
+                    }
+                    delete storage.mapDateDoctorIDMark[key];
+
+                })
+            } else {
+                // Добавляем смену
+                storage.mapDateDoctorIDMark[key] = 9999999;
+                if (button) button.classList.add('mark');
+                ajax.json(`/api/timesheets`, {
+                    ajaxMethod: 'POST',
+                    date: utils.dateRFC3339(date),
+                    userID: userID
+                }, (answer) => {
+                    if (!answer.ok) {
+                        notify.err('Ошибка добавления смены');
+                        // Откатываем состояние при ошибке
+                        delete storage.mapDateDoctorIDMark[key];
+                        if (button) button.classList.remove('mark');
+                    }
+                    storage.mapDateDoctorIDMark[key] = answer && answer.id ? answer.id : 9999999;
+            });
+        }
+    }
 }
 
 const currentUser = {
