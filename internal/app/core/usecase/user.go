@@ -67,13 +67,20 @@ func (u *UseCase) User(ctx context.Context, token string, id int64) (*domain.Use
 
 func (u *UseCase) Users(ctx context.Context, token string) ([]domain.User, error) {
 	// Только админ может получать список всех пользователей
-	if _, err := u.authorizeAdmin(ctx, token); err != nil {
+	var err error
+	user, err := u.authorizeDoctorOrAdmin(ctx, token)
+	if err != nil {
 		return nil, err
 	}
 
-	users, err := u.service.RepoUser.List(ctx, 0, 0)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list users: %w", err)
+	var users []domain.User
+	if user.RoleID == RoleAdmin {
+		users, err = u.service.RepoUser.List(ctx, 0, 0)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list users: %w", err)
+		}
+	} else {
+		users = []domain.User{*user}
 	}
 
 	for i := range users {

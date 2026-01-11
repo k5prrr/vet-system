@@ -409,23 +409,22 @@ title="${user.fio} ${day[1]}"
     },
 
     records: data => {
-        app.updateEntity(data, 'records', () => {
+        if (currentUser.role === 'doctor' || currentUser.role === 'admin') {
+            app.updateEntity(data, 'records', () => {
 
-            storage.records.forEach(item => {
-                item.dateTimeShow = `${item.dateTime.split('T')[0]}<br>${item.dateTime.split('T')[1].split('+')[0]}`
+                storage.records.forEach(item => {
+                    item.dateTimeShow = `${item.dateTime.split('T')[0]}<br>${item.dateTime.split('T')[1].split('+')[0]}`
+                })
+                pages.records()
             })
-            pages.records()
-        })
-        app.updateEntity(data, 'clients', () => {
-            storage.clientsMapID = storage.clients.reduce((acc, client) => {
-                acc[client.id] = client
-                return acc
-            }, {})
-            pages.records()
-        })
-        app.updateEntity(data, 'animals', () => {
-
-        })
+            app.updateEntity(data, 'clients', () => {
+                storage.clientsMapID = storage.clients.reduce((acc, client) => {
+                    acc[client.id] = client
+                    return acc
+                }, {})
+                pages.records()
+            })
+        }
 
         if (currentUser.role == "admin")
         app.updateEntity(data, 'users', () => {
@@ -435,6 +434,11 @@ title="${user.fio} ${day[1]}"
             }, {})
             pages.records()
         })
+
+        app.updateEntity(data, 'animals', () => {
+
+        })
+
         let items = storage.records || []
 
         utils.setText(` 
@@ -592,6 +596,7 @@ ${views.header(data)}
       </select>
     </div>
 
+${currentUser.role == 'admin' ? `
     <label class="name required">Врач</label>
     <div class="value">
       <select name="userID" required>
@@ -601,6 +606,11 @@ ${views.header(data)}
         ).join('')}
       </select>
     </div>
+    `:''}
+    ${currentUser.role == 'doctor' ? `<input type="hidden" name="userID" value="${currentUser.id}">`:''}
+        
+    
+    
 
     <label class="name required">Статус</label>
     <div class="value">
@@ -1312,8 +1322,10 @@ const app = {
     openCalendarDay: (date) => {
         // Кто врач
         // У кого есть записи на этотдень или помечен как рабочий
-        let doctors = storage.users.filter(user => true)
-        let times = app.listTimesDay().reverse()
+        let doctors = storage.users.filter(user => (storage.mapDateDoctorIDMark && storage.mapDateDoctorIDMark[`${date} ${user.id}`]) ||
+            (storage.mapDateDoctorIDCount && storage.mapDateDoctorIDCount[`${date} ${user.id}`]) ||
+            currentUser.role === 'doctor' )
+        let times = app.listTimesDay()
 
 
         utils.setText(`
@@ -1340,6 +1352,8 @@ onmousedown="pages.record({
         `, 'calendarDay')
     },
         changeCalendarDay: (date, userID) => {
+            if (currentUser.role !== 'admin') return;
+
             const key = `${date} ${userID}`;
             const button = document.getElementById(`day_${date}_${userID}`);
 

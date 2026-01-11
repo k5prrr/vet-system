@@ -255,7 +255,7 @@ func (r *RepoRecordStatus) ListBy(ctx context.Context, filterKey, filterValue st
 	}
 
 	query := fmt.Sprintf(`
-		SELECT %s
+		SELECT id, %s
 		FROM %s
 		WHERE deleted_at IS NULL AND %s = $1
 		%s

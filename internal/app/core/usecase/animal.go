@@ -4,6 +4,7 @@ import (
 	"app/internal/app/core/domain"
 	"context"
 	"fmt"
+	"strconv"
 )
 
 func (u *UseCase) CreateAnimal(ctx context.Context, token string, input *domain.Animal) (int64, error) {
@@ -33,14 +34,26 @@ func (u *UseCase) Animal(ctx context.Context, token string, id int64) (*domain.A
 }
 
 func (u *UseCase) Animals(ctx context.Context, token string) ([]domain.Animal, error) {
-	_, err := u.authorizeDoctorOrAdmin(ctx, token)
+	var err error
+	user, err := u.authorizeClientOrDoctorOrAdmin(ctx, token)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("authorizeClientOrDoctorOrAdmin: %w", err)
 	}
-	animals, err := u.service.RepoAnimal.List(ctx, 0, 0)
+
+	var animals []domain.Animal
+	if user.RoleID == RoleClient {
+		client, err := u.service.RepoClient.GetBy(ctx, "phone", user.Phone)
+		if err != nil {
+			return nil, fmt.Errorf("lookup client by phone: %w", err)
+		}
+		animals, err = u.service.RepoAnimal.ListBy(ctx, "client_id", strconv.FormatInt(client.ID, 10), 0, 0)
+	} else {
+		animals, err = u.service.RepoAnimal.List(ctx, 0, 0)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("list animals: %w", err)
 	}
+
 	return animals, nil
 }
 

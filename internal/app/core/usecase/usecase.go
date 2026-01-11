@@ -45,9 +45,6 @@ func (u *UseCase) authorize(ctx context.Context, token string) (*domain.User, er
 	if err != nil {
 		return nil, fmt.Errorf("user not found: %w", err)
 	}
-	if user.RoleID != RoleDoctor && user.RoleID != RoleAdmin {
-		return nil, ErrForbidden
-	}
 
 	return user, nil
 }
@@ -55,7 +52,7 @@ func (u *UseCase) authorize(ctx context.Context, token string) (*domain.User, er
 func (u *UseCase) authorizeClientOrDoctorOrAdmin(ctx context.Context, token string) (*domain.User, error) {
 	user, err := u.authorize(ctx, token)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("func authorizeClientOrDoctorOrAdmin: %w", err)
 	}
 	if user.RoleID != RoleClient && user.RoleID != RoleDoctor && user.RoleID != RoleAdmin {
 		return nil, ErrForbidden

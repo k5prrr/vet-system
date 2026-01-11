@@ -259,7 +259,7 @@ func (r *RepoTimesheet) ListBy(ctx context.Context, filterKey, filterValue strin
 	}
 
 	query := fmt.Sprintf(`
-		SELECT %s
+		SELECT id, %s
 		FROM %s
 		WHERE deleted_at IS NULL AND %s = $1
 		%s

@@ -278,7 +278,7 @@ func (r *RepoAnimal) ListBy(ctx context.Context, filterKey, filterValue string, 
 	}
 
 	query := fmt.Sprintf(`
-		SELECT %s
+		SELECT id, %s
 		FROM %s
 		WHERE deleted_at IS NULL AND %s = $1
 		%s

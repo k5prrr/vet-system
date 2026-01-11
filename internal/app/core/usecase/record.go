@@ -8,14 +8,21 @@ import (
 )
 
 func (u *UseCase) CreateRecord(ctx context.Context, token string, input *domain.Record) (int64, error) {
-	actor, err := u.authorizeClientOrDoctorOrAdmin(ctx, token)
+	user, err := u.authorizeClientOrDoctorOrAdmin(ctx, token)
 	if err != nil {
 		return 0, err
 	}
 
 	entity := *input
-	entity.ParentID = actor.ID
-	entity.ParentRoleID = actor.RoleID
+	entity.ParentID = user.ID
+	entity.ParentRoleID = user.RoleID
+
+	if user.RoleID == RoleDoctor {
+		entity.UserID = user.ID
+	}
+	if user.RoleID == RoleClient {
+		entity.UserID = 0
+	}
 
 	id, err := u.service.RepoRecord.Add(ctx, &entity)
 	if err != nil {
@@ -46,7 +53,7 @@ func (u *UseCase) Record(ctx context.Context, token string, id int64) (*domain.R
 func (u *UseCase) Records(ctx context.Context, token string) ([]domain.Record, error) {
 	var err error
 
-	user, err := u.authorizeDoctorOrAdmin(ctx, token)
+	user, err := u.authorizeClientOrDoctorOrAdmin(ctx, token)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +64,11 @@ func (u *UseCase) Records(ctx context.Context, token string) ([]domain.Record, e
 	} else if user.RoleID == RoleDoctor {
 		records, err = u.service.RepoRecord.ListBy(ctx, "user_id", strconv.FormatInt(user.ID, 10), 0, 0)
 	} else {
-		records, err = u.service.RepoRecord.ListBy(ctx, "client_id", strconv.FormatInt(user.ID, 10), 0, 0)
+		client, err := u.service.RepoClient.GetBy(ctx, "phone", user.Phone)
+		if err != nil {
+			return nil, fmt.Errorf("list animals: %w", err)
+		}
+		records, err = u.service.RepoRecord.ListBy(ctx, "client_id", strconv.FormatInt(client.ID, 10), 0, 0)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("list records: %w", err)
