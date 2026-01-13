@@ -16,9 +16,8 @@ cp .env.example .env
 
 chmod +x make.sh
 ./make.sh help
-./make.sh rm_base
-./make.sh base
-./make.sh run
+./make.sh start
+curl -X 'POST' 'http://localhost:8080/api/create_admin'
 
 Далее
 Смотрим http://localhost:8080/lk/
@@ -27,18 +26,14 @@ chmod +x make.sh
 Второе поле: ps
 
 
-## Прочее
-curl -X 'POST' 'http://localhost:8080/api/create_admin'
-podman compose -f app.yml up --build -d
-
 ## поднимает БД и adminer
-podman-compose down
-podman-compose -f db.yml up -d
+podman compose down
+podman compose -f db.yml up -d
 podman ps -a
 http://localhost:45010/
 
 ## Поднятие WEB front для теста
-podman-compose -f front.yml up -d
+podman compose -f front.yml up -d
 http://localhost:8081/
 http://localhost:8081/lk/
 http://localhost:8081/api/doc/

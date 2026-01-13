@@ -22,7 +22,7 @@ services:
 
   app:
     container_name: app1
-    restart: always
+    #restart: always
     build: .
     env_file:
       - .env

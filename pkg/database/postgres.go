@@ -96,10 +96,10 @@ func New(conf *DBConfig) (IDB, error) {
 		return nil, fmt.Errorf("failed to create connection pool: %w", err)
 	}
 
-	if err := pool.Ping(ctx); err != nil {
+	/*if err := pool.Ping(ctx); err != nil {
 		pool.Close()
 		return nil, fmt.Errorf("failed to ping database: %w", err)
-	}
+	}*/
 
 	return &pgxDB{pool: pool}, nil
 }

@@ -10,8 +10,23 @@ show_help() {
 }
 
 case "$1" in
-    # help: start - init, base, run, create_admin
+    # help: start - сносит базу, но чистый старт
     start)
+        podman stop -a
+        podman rm -a
+        podman ps -a
+        sudo rm -rf pg_data
+        ./make.sh init
+        podman compose -f app.yml up --build -d
+        podman ps -a
+        echo "http://localhost:8080/lk/  Доступы в .env"
+        ;;
+    # help: stop - отключает контейнеры
+    stop)
+        podman stop -a
+        ;;
+    # help: start_local - стартуем локально
+    start_local)
       ./make.sh init && ./make.sh base && ./make.sh run
       #&& curl -X 'POST' 'http://localhost:8080/api/create_admin'
       ;;
